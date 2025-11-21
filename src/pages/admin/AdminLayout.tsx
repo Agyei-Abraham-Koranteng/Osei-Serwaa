@@ -1,7 +1,7 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, UtensilsCrossed, Users, Calendar, ShoppingBag, Phone, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, Users, Calendar, Image, Phone, LogOut, Menu, X, MessageSquare, Home } from 'lucide-react';
 import { useState } from 'react';
 
 const AdminLayout = () => {
@@ -15,12 +15,13 @@ const AdminLayout = () => {
 
   const navItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/admin/home', label: 'Home Content', icon: LayoutDashboard },
+    { path: '/admin/home', label: 'Home Content', icon: Home },
     { path: '/admin/menu', label: 'Menu Management', icon: UtensilsCrossed },
     { path: '/admin/about', label: 'About Content', icon: Users },
     { path: '/admin/reservations', label: 'Reservations', icon: Calendar },
-    { path: '/admin/gallery', label: 'Gallery', icon: ShoppingBag },
+    { path: '/admin/gallery', label: 'Gallery', icon: Image },
     { path: '/admin/contact', label: 'Contact Info', icon: Phone },
+    { path: '/admin/contact-messages', label: 'Messages', icon: MessageSquare },
   ];
 
   const isActive = (path: string) => location.pathname === path;

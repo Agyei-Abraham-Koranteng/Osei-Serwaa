@@ -59,6 +59,16 @@ export interface Reservation {
   createdAt: string;
 }
 
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'unread' | 'read' | 'archived';
+  createdAt: string;
+}
+
 interface RestaurantContextType {
   // Menu
   menuItems: MenuItem[];
@@ -85,6 +95,12 @@ interface RestaurantContextType {
   addReservation: (reservation: Omit<Reservation, 'id' | 'createdAt'>) => void;
   updateReservationStatus: (id: string, status: Reservation['status']) => void;
   deleteReservation: (id: string) => void;
+  
+  // Contact Messages
+  contactMessages: ContactMessage[];
+  addContactMessage: (message: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) => void;
+  updateContactMessageStatus: (id: string, status: ContactMessage['status']) => void;
+  deleteContactMessage: (id: string) => void;
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -106,6 +122,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   const [reservations, setReservations] = useState<Reservation[]>(
     reservationsDataJson.reservations as Reservation[]
   );
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -202,6 +219,27 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     setReservations(reservations.filter(reservation => reservation.id !== id));
   };
 
+  // Contact Message functions
+  const addContactMessage = (message: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) => {
+    const newMessage: ContactMessage = {
+      ...message,
+      id: `MSG-${Date.now()}`,
+      status: 'unread',
+      createdAt: new Date().toISOString(),
+    };
+    setContactMessages([newMessage, ...contactMessages]);
+  };
+
+  const updateContactMessageStatus = (id: string, status: ContactMessage['status']) => {
+    setContactMessages(contactMessages.map(message => 
+      message.id === id ? { ...message, status } : message
+    ));
+  };
+
+  const deleteContactMessage = (id: string) => {
+    setContactMessages(contactMessages.filter(message => message.id !== id));
+  };
+
   const value: RestaurantContextType = {
     menuItems,
     categories,
@@ -221,6 +259,10 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     addReservation,
     updateReservationStatus,
     deleteReservation,
+    contactMessages,
+    addContactMessage,
+    updateContactMessageStatus,
+    deleteContactMessage,
   };
 
   return (

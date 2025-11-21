@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { MenuItem } from '@/context/RestaurantContext';
+import heroImage from '@/assets/hero-restaurant.jpg';
 
 const MenuManagement = () => {
   const { menuItems, categories, addMenuItem, updateMenuItem, deleteMenuItem } = useRestaurant();
@@ -117,11 +118,23 @@ const MenuManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Menu Management</h1>
-          <p className="text-muted-foreground mt-1">Manage your restaurant menu items</p>
+      {/* Hero Section */}
+      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-xl">
+        <div 
+          className="h-48 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
         </div>
+        <div className="absolute inset-0 flex items-center">
+          <div className="container mx-auto px-10">
+            <h1 className="text-4xl font-bold text-white mb-2">Menu Management</h1>
+            <p className="text-white/90">Manage your restaurant menu items</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) resetForm();

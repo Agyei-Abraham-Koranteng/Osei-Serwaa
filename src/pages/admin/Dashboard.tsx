@@ -1,25 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRestaurant } from '@/context/RestaurantContext';
-import { DollarSign, ShoppingBag, Calendar, UtensilsCrossed } from 'lucide-react';
+import { Calendar, UtensilsCrossed, MessageSquare, Users, Home, Image, Phone } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
-  const { orders, reservations, menuItems } = useRestaurant();
+  const { reservations, menuItems, contactMessages } = useRestaurant();
 
   const stats = [
-    {
-      title: 'Total Orders',
-      value: orders.length,
-      icon: ShoppingBag,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Pending Orders',
-      value: orders.filter((o) => o.status === 'pending').length,
-      icon: ShoppingBag,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-    },
     {
       title: 'Reservations',
       value: reservations.length,
@@ -34,16 +22,38 @@ const Dashboard = () => {
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
+    {
+      title: 'Contact Messages',
+      value: contactMessages.filter(m => m.status === 'unread').length,
+      icon: MessageSquare,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      title: 'Confirmed Bookings',
+      value: reservations.filter(r => r.status === 'confirmed').length,
+      icon: Users,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+    },
   ];
 
-  const totalRevenue = orders
-    .filter((o) => o.status === 'completed')
-    .reduce((sum, order) => sum + order.totalAmount, 0);
+  const quickLinks = [
+    { path: '/admin/menu', label: 'Menu Management', icon: UtensilsCrossed, color: 'text-purple-600' },
+    { path: '/admin/reservations', label: 'Reservations', icon: Calendar, color: 'text-green-600' },
+    { path: '/admin/contact-messages', label: 'Messages', icon: MessageSquare, color: 'text-blue-600' },
+    { path: '/admin/home', label: 'Home Content', icon: Home, color: 'text-orange-600' },
+    { path: '/admin/gallery', label: 'Gallery', icon: Image, color: 'text-pink-600' },
+    { path: '/admin/contact', label: 'Contact Info', icon: Phone, color: 'text-teal-600' },
+  ];
 
-  const recentOrders = orders.slice(0, 5);
   const upcomingReservations = reservations
     .filter((r) => r.status !== 'cancelled')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 5);
+
+  const recentMessages = contactMessages
+    .filter(m => m.status === 'unread')
     .slice(0, 5);
 
   return (
@@ -75,55 +85,55 @@ const Dashboard = () => {
         })}
       </div>
 
-      {/* Revenue Card */}
+      {/* Quick Links */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Revenue (Completed)</p>
-              <p className="text-3xl font-bold mt-2 text-primary">GH₵ {totalRevenue.toFixed(2)}</p>
-            </div>
-            <div className="p-3 rounded-full bg-primary/10">
-              <DollarSign className="h-8 w-8 text-primary" />
-            </div>
+        <CardHeader>
+          <CardTitle>Quick Links</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {quickLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link key={link.path} to={link.path}>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-auto flex flex-col items-center gap-3 py-6 hover:border-primary/50 hover:shadow-sm transition-all"
+                  >
+                    <Icon className={`h-8 w-8 ${link.color}`} />
+                    <span className="text-sm font-medium text-center">{link.label}</span>
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
+        {/* Recent Messages */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
+            <CardTitle>Recent Messages</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentOrders.length > 0 ? (
+            {recentMessages.length > 0 ? (
               <div className="space-y-4">
-                {recentOrders.map((order) => (
-                  <div key={order.id} className="flex justify-between items-center p-3 border border-border rounded-lg">
-                    <div>
-                      <p className="font-medium">{order.customerName}</p>
-                      <p className="text-sm text-muted-foreground">{order.id}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">GH₵ {order.totalAmount.toFixed(2)}</p>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          order.status === 'completed'
-                            ? 'bg-green-100 text-green-700'
-                            : order.status === 'pending'
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        {order.status}
+                {recentMessages.map((message) => (
+                  <div key={message.id} className="p-3 border border-border rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="font-medium">{message.name}</p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                        {message.status}
                       </span>
                     </div>
+                    <p className="text-sm text-muted-foreground mb-1">{message.subject}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{message.message}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-8">No orders yet</p>
+              <p className="text-center text-muted-foreground py-8">No new messages</p>
             )}
           </CardContent>
         </Card>

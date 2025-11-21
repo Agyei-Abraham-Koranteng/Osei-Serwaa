@@ -60,11 +60,23 @@ const GalleryManagement = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Gallery Management</h1>
-          <p className="text-muted-foreground mt-2">Manage images displayed in the gallery</p>
+      {/* Hero Section */}
+      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-xl">
+        <div 
+          className="h-48 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroRestaurant})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
         </div>
+        <div className="absolute inset-0 flex items-center">
+          <div className="container mx-auto px-10">
+            <h1 className="text-4xl font-bold text-white mb-2">Gallery Management</h1>
+            <p className="text-white/90">Manage images displayed in the gallery</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <Button onClick={handleAddImage} className="gap-2">
           <Plus className="h-4 w-4" />
           Add Image

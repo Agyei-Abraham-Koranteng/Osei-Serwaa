@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useRestaurant } from '@/context/RestaurantContext';
 import heroRestaurant from '@/assets/hero-restaurant.jpg';
 
 const Contact = () => {
@@ -17,8 +18,11 @@ const Contact = () => {
     message: '',
   });
 
+  const { addContactMessage } = useRestaurant();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    addContactMessage(formData);
     toast({
       title: 'Message sent!',
       description: 'Thank you for contacting us. We will get back to you soon.',

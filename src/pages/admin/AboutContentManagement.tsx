@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
+import heroImage from '@/assets/hero-restaurant.jpg';
 
 const AboutContentManagement = () => {
   const { toast } = useToast();
@@ -59,9 +60,20 @@ const AboutContentManagement = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">About Content Management</h1>
-        <p className="text-muted-foreground mt-2">Manage the content displayed on the about page</p>
+      {/* Hero Section */}
+      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-xl">
+        <div 
+          className="h-48 bg-cover bg-center"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
+        </div>
+        <div className="absolute inset-0 flex items-center">
+          <div className="container mx-auto px-10">
+            <h1 className="text-4xl font-bold text-white mb-2">About Content Management</h1>
+            <p className="text-white/90">Manage the content displayed on the about page</p>
+          </div>
+        </div>
       </div>
 
       {/* Our Story */}

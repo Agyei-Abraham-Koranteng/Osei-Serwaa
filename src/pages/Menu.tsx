@@ -3,7 +3,8 @@ import { useRestaurant } from '@/context/RestaurantContext';
 import MenuCard from '@/components/MenuCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ChefHat } from 'lucide-react';
+import heroImage from '@/assets/hero-restaurant.jpg';
 
 const Menu = () => {
   const { menuItems, categories } = useRestaurant();
@@ -18,17 +19,31 @@ const Menu = () => {
   });
 
   return (
-    <div className="min-h-screen pt-28 pb-24 bg-gradient-subtle">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center space-y-6 mb-16">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            Our <span className="gradient-text">Menu</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Explore our selection of authentic Ghanaian dishes, prepared fresh daily with traditional recipes
-          </p>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center scale-105"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        >
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
         </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center space-y-6 max-w-4xl mx-auto">
+            <div className="flex justify-center mb-4">
+              <ChefHat className="h-16 w-16 text-primary" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white">
+              Our <span className="gradient-text">Menu</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 leading-relaxed">
+              Explore our selection of authentic Ghanaian dishes, prepared fresh daily with traditional recipes
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-20 bg-gradient-subtle">
 
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-12">

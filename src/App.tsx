@@ -28,6 +28,7 @@ import AboutContentManagement from "./pages/admin/AboutContentManagement";
 import ReservationManagement from "./pages/admin/ReservationManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import ContactInfoManagement from "./pages/admin/ContactInfoManagement";
+import ContactMessagesManagement from "./pages/admin/ContactMessagesManagement";
 
 import NotFound from "./pages/NotFound";
 
@@ -53,7 +54,6 @@ const App = () => (
                 <Route path="/orders" element={<Orders />} />
               </Route>
 
-              {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route path="dashboard" element={<Dashboard />} />
@@ -63,6 +63,7 @@ const App = () => (
                 <Route path="reservations" element={<ReservationManagement />} />
                 <Route path="gallery" element={<GalleryManagement />} />
                 <Route path="contact" element={<ContactInfoManagement />} />
+                <Route path="contact-messages" element={<ContactMessagesManagement />} />
               </Route>
 
               {/* 404 Route */}
