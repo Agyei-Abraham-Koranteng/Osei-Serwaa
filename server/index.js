@@ -36,24 +36,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve frontend build when in production (optional)
-if (process.env.NODE_ENV === 'production') {
-    const clientDist = path.join(__dirname, '..', 'dist');
-    const indexFile = path.join(clientDist, 'index.html');
 
-    if (fs.existsSync(indexFile)) {
-        app.use(express.static(clientDist));
-        app.get('*', (req, res) => {
-            // API routes should not be handled by this catch-all
-            if (req.path.startsWith('/api')) {
-                return res.status(404).json({ error: 'API endpoint not found' });
-            }
-            res.sendFile(indexFile);
-        });
-    } else {
-        console.warn(`Production build not found at ${indexFile}. Skipping static file serving.`);
-    }
-}
 
 // Middleware to authenticate token
 const authenticateToken = (req, res, next) => {
@@ -480,6 +463,25 @@ app.delete('/api/images/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+// Serve frontend build when in production (optional)
+if (process.env.NODE_ENV === 'production') {
+    const clientDist = path.join(__dirname, '..', 'dist');
+    const indexFile = path.join(clientDist, 'index.html');
+
+    if (fs.existsSync(indexFile)) {
+        app.use(express.static(clientDist));
+        app.get('*', (req, res) => {
+            // API routes should not be handled by this catch-all
+            if (req.path.startsWith('/api')) {
+                return res.status(404).json({ error: 'API endpoint not found' });
+            }
+            res.sendFile(indexFile);
+        });
+    } else {
+        console.warn(`Production build not found at ${indexFile}. Skipping static file serving.`);
+    }
+}
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
