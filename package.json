@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server/index.js",
-    "postinstall": "cd server && npm ci"
+    "postinstall": "cd server && npm ci && cd .. && npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

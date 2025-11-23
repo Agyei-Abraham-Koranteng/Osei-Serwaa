@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import db from './db.js';
 
@@ -38,10 +39,16 @@ const __dirname = path.dirname(__filename);
 // Serve frontend build when in production (optional)
 if (process.env.NODE_ENV === 'production') {
     const clientDist = path.join(__dirname, '..', 'dist');
-    app.use(express.static(clientDist));
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(clientDist, 'index.html'));
-    });
+    const indexFile = path.join(clientDist, 'index.html');
+
+    if (fs.existsSync(indexFile)) {
+        app.use(express.static(clientDist));
+        app.get('*', (req, res) => {
+            res.sendFile(indexFile);
+        });
+    } else {
+        console.warn(`Production build not found at ${indexFile}. Skipping static file serving.`);
+    }
 }
 
 // Middleware to authenticate token
