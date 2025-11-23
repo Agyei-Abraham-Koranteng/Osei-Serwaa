@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Upload, X, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3001';
+
 interface ImageUploadProps {
     label?: string;
     value?: string; // Current image URL or data URL
@@ -63,7 +65,7 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
             formData.append('image', file);
 
             const token = localStorage.getItem('auth_token');
-            const response = await fetch('http://localhost:3001/api/upload/image', {
+            const response = await fetch(`${API_URL}/api/upload/image`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -78,7 +80,7 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
             const data = await response.json();
 
             // Fetch the actual data URL
-            const imageResponse = await fetch(`http://localhost:3001${data.url}`);
+            const imageResponse = await fetch(`${API_URL}${data.url}`);
             const imageData = await imageResponse.json();
 
             onChange(imageData.dataUrl);
