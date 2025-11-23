@@ -8,20 +8,20 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// If DATABASE_PATH is set and is relative, resolve it relative to this file's directory.
-let dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database.sqlite');
-if (process.env.DATABASE_PATH && !path.isAbsolute(process.env.DATABASE_PATH)) {
-  dbPath = path.resolve(__dirname, process.env.DATABASE_PATH);
-}
+// Use DATABASE_PATH exactly as provided in the environment when present.
+// This keeps behavior consistent with the value in `.env.example` (for example `./server/database.sqlite`).
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database.sqlite');
 
-// Ensure parent directory exists so SQLite can create the file
+// Ensure parent directory exists so SQLite can create the file. We do not rewrite
+// relative env paths — we create the directory relative to the current process
+// working directory when a relative path is supplied (this matches typical dev setups).
 const dbDir = path.dirname(dbPath);
 try {
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 } catch (e) {
-  console.error('Failed to create database directory', dbDir, e.message);
+  console.error('Failed to create database directory', dbDir, e && e.message);
 }
 
 const db = new sqlite3.Database(dbPath, (err) => {
