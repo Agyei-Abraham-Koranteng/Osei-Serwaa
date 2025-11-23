@@ -345,10 +345,14 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
+      // Map 'image' to 'image_url' for server compatibility
+      const { image, ...rest } = item as any;
+      const serverData = { ...rest, image_url: image };
+
       const res = await fetch(`${API_URL}/api/menu`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(item),
+        body: JSON.stringify(serverData),
       });
       if (res.ok) {
         const newItem = await res.json();
@@ -363,10 +367,14 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
+      // Map 'image' to 'image_url' for server compatibility
+      const { image, ...rest } = updates as any;
+      const serverData = image !== undefined ? { ...rest, image_url: image } : rest;
+
       const res = await fetch(`${API_URL}/api/menu/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(serverData),
       });
       if (res.ok) {
         setMenuItems(menuItems.map(item => (item.id === id ? { ...item, ...updates } : item)));
