@@ -13,12 +13,20 @@ services:
       - key: NODE_ENV
         value: production
       - key: SECRET_KEY
-        value: ""
+        fromSecret: SECRET_KEY
       - key: DATABASE_PATH
-        value: ./server/database.sqlite
+        value: /data/database.sqlite
 
 # Notes:
 # - Free plan: Render instances have ephemeral filesystem; the SQLite file
-#   will not be reliably persisted across deploys or instance restarts.
-# - For production persistence: upgrade the service or use a managed DB
-#   (Postgres, MySQL) and set a connection string environment variable.
+#   will not be reliably persisted across deploys or instance restarts unless
+#   you attach a persistent disk and set DATABASE_PATH to a path on that disk.
+# - When creating the service from the repo, add a Persistent Disk in the
+#   Render UI and mount it at `/data` (or adjust the path above). Alternatively
+#   migrate to a managed DB (Postgres, MySQL) for production.
+
+# Define a persistent disk resource. The Render UI will also ask to attach a
+# disk when creating the service from repo. Adjust `sizeGB` as needed.
+disks:
+  - name: db-data
+    sizeGB: 10
