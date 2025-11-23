@@ -7,10 +7,8 @@ services:
     branch: main
     runtime: node
     buildCommand: npm ci && npm run build
-    startCommand: npm start
+    startCommand: NODE_ENV=production npm start
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
