@@ -596,52 +596,57 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         setSiteVisitors(0);
       }
 
+    } catch (err) {
+      console.error('Error resetting visitors:', err);
+    }
+  };
 
-      const value: RestaurantContextType = {
-        menuItems,
-        categories,
-        addMenuItem,
-        updateMenuItem,
-        deleteMenuItem,
-        cart,
-        addToCart,
-        removeFromCart,
-        updateCartQuantity,
-        clearCart,
-        cartTotal,
-        reservations,
-        addReservation,
-        updateReservationStatus,
-        deleteReservation,
-        contactMessages,
-        addContactMessage,
-        updateContactMessageStatus,
-        deleteContactMessage,
-        users,
-        addUser,
-        deleteUser,
-        footerContent,
-        setFooterContent,
-        heroImages,
-        setHeroImage,
-        heroTexts,
-        setHeroText,
-        homeContent,
-        setHomeContent,
-        aboutContent,
-        setAboutContent,
-        galleryImages,
-        setGalleryImages,
-        contactPageInfo,
-        setContactPageInfo,
-        siteVisitors,
-        incrementSiteVisitors,
-        resetSiteVisitors,
-      };
+  const value: RestaurantContextType = {
+    menuItems,
+    categories,
+    addMenuItem,
+    updateMenuItem,
+    deleteMenuItem,
+    cart,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+    clearCart,
+    cartTotal,
+    reservations,
+    addReservation,
+    updateReservationStatus,
+    deleteReservation,
+    contactMessages,
+    addContactMessage,
+    updateContactMessageStatus,
+    deleteContactMessage,
+    users,
+    addUser,
+    deleteUser,
+    footerContent,
+    setFooterContent,
+    heroImages,
+    setHeroImage,
+    heroTexts,
+    setHeroText,
+    homeContent,
+    setHomeContent,
+    aboutContent,
+    setAboutContent,
+    galleryImages,
+    setGalleryImages,
+    contactPageInfo,
+    setContactPageInfo,
+    siteVisitors,
+    incrementSiteVisitors,
+    resetSiteVisitors,
+  };
 
-      return (
-        <RestaurantContext.Provider value={value}>
-          {children}
-        </RestaurantContext.Provider>
-      );
-    };
+  return (
+    <RestaurantContext.Provider value={value}>
+      {children}
+    </RestaurantContext.Provider>
+  );
+};
+
