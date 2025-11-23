@@ -1,0 +1,24 @@
+# Render service configuration for "Create a new service from repo"
+# This file provides a minimal configuration to build and start the app on Render.
+# IMPORTANT: Set `SECRET_KEY` in the Render dashboard (do NOT commit secrets here).
+
+services:
+  - type: web
+    name: osei-serwaa-kitchen
+    env: node
+    branch: main
+    # Use an appropriate plan (free, starter, standard, etc.) or omit to use default
+    # plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SECRET_KEY
+        value: ""
+      - key: DATABASE_PATH
+        value: ./server/database.sqlite
+
+# If you need SQLite persistence between deploys, add a persistent disk in the
+# Render dashboard and set DATABASE_PATH to the disk path (for example `/data/database.sqlite`).
+# You can also extend this file with a disk section if you prefer to configure disks in YAML.
