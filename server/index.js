@@ -44,6 +44,10 @@ if (process.env.NODE_ENV === 'production') {
     if (fs.existsSync(indexFile)) {
         app.use(express.static(clientDist));
         app.get('*', (req, res) => {
+            // API routes should not be handled by this catch-all
+            if (req.path.startsWith('/api')) {
+                return res.status(404).json({ error: 'API endpoint not found' });
+            }
             res.sendFile(indexFile);
         });
     } else {
@@ -67,10 +71,12 @@ const authenticateToken = (req, res, next) => {
 
 // --- Auth Routes ---
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
-    db.get("SELECT * FROM users WHERE email = ?", [email], (err, user) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const { rows } = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+        const user = rows[0];
+
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
         const validPassword = bcrypt.compareSync(password, user.password);
@@ -78,30 +84,31 @@ app.post('/api/login', (req, res) => {
 
         const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET_KEY, { expiresIn: '24h' });
         res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- User Management Routes ---
 
-app.get('/api/users', authenticateToken, (req, res) => {
-    console.log('Fetching users...');
-    db.all("SELECT id, name, email, role FROM users", [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching users:', err);
-            return res.status(500).json({ error: err.message });
-        }
+app.get('/api/users', authenticateToken, async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT id, name, email, role FROM users");
         const mappedRows = rows.map(row => ({
             id: row.id.toString(),
             name: row.name,
             email: row.email,
             role: row.role,
-            created_at: new Date().toISOString() // We don't have created_at in schema yet, but context expects it
+            created_at: new Date().toISOString()
         }));
         res.json(mappedRows);
-    });
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/users', authenticateToken, (req, res) => {
+app.post('/api/users', authenticateToken, async (req, res) => {
     const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -109,161 +116,150 @@ app.post('/api/users', authenticateToken, (req, res) => {
 
     const passwordHash = bcrypt.hashSync(password, 10);
 
-    db.run("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-        [name, email, passwordHash, role || 'admin'],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID.toString(), name, email, role, created_at: new Date().toISOString() });
-        }
-    );
+    try {
+        const { rows } = await db.query(
+            "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id",
+            [name, email, passwordHash, role || 'admin']
+        );
+        res.json({ id: rows[0].id.toString(), name, email, role, created_at: new Date().toISOString() });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.delete('/api/users/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM users WHERE id = ?", req.params.id, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/users/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM users WHERE id = $1", [req.params.id]);
         res.json({ message: 'User deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Category Routes ---
 
-app.get('/api/categories', (req, res) => {
-    db.all("SELECT * FROM categories ORDER BY display_order ASC", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+app.get('/api/categories', async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT * FROM categories ORDER BY display_order ASC");
         res.json(rows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/categories', authenticateToken, (req, res) => {
+app.post('/api/categories', authenticateToken, async (req, res) => {
     const { id, name, description, display_order } = req.body;
     const catId = id || name.toLowerCase().replace(/\s+/g, '-');
 
-    db.run("INSERT INTO categories (id, name, description, display_order) VALUES (?, ?, ?, ?)",
-        [catId, name, description, display_order || 99],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: catId, name, description, display_order });
-        }
-    );
+    try {
+        await db.query(
+            "INSERT INTO categories (id, name, description, display_order) VALUES ($1, $2, $3, $4)",
+            [catId, name, description, display_order || 99]
+        );
+        res.json({ id: catId, name, description, display_order });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.put('/api/categories/:id', authenticateToken, (req, res) => {
+app.put('/api/categories/:id', authenticateToken, async (req, res) => {
     const { name, description, display_order } = req.body;
-    db.run("UPDATE categories SET name = ?, description = ?, display_order = ? WHERE id = ?",
-        [name, description, display_order, req.params.id],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: 'Category updated successfully' });
-        }
-    );
+    try {
+        await db.query(
+            "UPDATE categories SET name = $1, description = $2, display_order = $3 WHERE id = $4",
+            [name, description, display_order, req.params.id]
+        );
+        res.json({ message: 'Category updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.delete('/api/categories/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM categories WHERE id = ?", req.params.id, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM categories WHERE id = $1", [req.params.id]);
         res.json({ message: 'Category deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Menu Routes ---
 
-app.get('/api/menu', (req, res) => {
-    db.all("SELECT * FROM menu_items", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        // Map database fields to frontend expectations
+app.get('/api/menu', async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT * FROM menu_items");
         const mappedRows = rows.map(row => ({
             id: row.id,
             name: row.name,
             description: row.description,
             price: row.price,
             category: row.category,
-            categoryId: row.category, // Use category as categoryId if not stored separately
-            image: row.image_url || row.image, // Map image_url to image
-            featured: Boolean(row.featured), // Convert 0/1 to boolean
-            available: Boolean(row.available), // Convert 0/1 to boolean
+            categoryId: row.category,
+            image: row.image_url || row.image,
+            featured: Boolean(row.featured),
+            available: Boolean(row.available),
             spicyLevel: row.spicyLevel || 0
         }));
-
         res.json(mappedRows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/menu', authenticateToken, (req, res) => {
+app.post('/api/menu', authenticateToken, async (req, res) => {
     const { name, description, price, category, image_url, featured, available } = req.body;
-    db.run("INSERT INTO menu_items (name, description, price, category, image_url, featured, available) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [name, description, price, category, image_url, featured ? 1 : 0, available ? 1 : 1],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, ...req.body });
-        }
-    );
+    try {
+        const { rows } = await db.query(
+            "INSERT INTO menu_items (name, description, price, category, image_url, featured, available) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+            [name, description, price, category, image_url, featured ? true : false, available ? true : false]
+        );
+        res.json({ id: rows[0].id, ...req.body });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.put('/api/menu/:id', authenticateToken, (req, res) => {
+app.put('/api/menu/:id', authenticateToken, async (req, res) => {
     const { name, description, price, category, image_url, available, featured } = req.body;
-    db.run("UPDATE menu_items SET name = ?, description = ?, price = ?, category = ?, image_url = ?, available = ?, featured = ? WHERE id = ?",
-        [name, description, price, category, image_url, available ? 1 : 0, featured ? 1 : 0, req.params.id],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: 'Updated successfully' });
-        }
-    );
+    try {
+        await db.query(
+            "UPDATE menu_items SET name = $1, description = $2, price = $3, category = $4, image_url = $5, available = $6, featured = $7 WHERE id = $8",
+            [name, description, price, category, image_url, available ? true : false, featured ? true : false, req.params.id]
+        );
+        res.json({ message: 'Updated successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.delete('/api/menu/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM menu_items WHERE id = ?", req.params.id, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/menu/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM menu_items WHERE id = $1", [req.params.id]);
         res.json({ message: 'Deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Reservation Routes ---
 
-app.post('/api/reservations', (req, res) => {
-    const { name, email, phone, date, time, guests } = req.body;
-    db.run("INSERT INTO reservations (name, email, phone, date, time, guests) VALUES (?, ?, ?, ?, ?, ?)",
-        [name, email, phone, date, time, guests],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, message: 'Reservation created' });
-        }
-    );
-});
-
-app.get('/api/reservations', authenticateToken, (req, res) => {
-    db.all("SELECT * FROM reservations ORDER BY created_at DESC", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
-
-app.put('/api/reservations/:id/status', authenticateToken, (req, res) => {
-    const { status } = req.body;
-    db.run("UPDATE reservations SET status = ? WHERE id = ?", [status, req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Status updated' });
-    });
-});
-
-// --- Reservation Routes ---
-
-app.post('/api/reservations', (req, res) => {
+app.post('/api/reservations', async (req, res) => {
     const { name, email, phone, date, time, guests, specialRequests } = req.body;
-    db.run("INSERT INTO reservations (name, email, phone, date, time, guests, special_requests) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [name, email, phone, date, time, guests, specialRequests || ''],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, message: 'Reservation created successfully' });
-        }
-    );
+    try {
+        const { rows } = await db.query(
+            "INSERT INTO reservations (name, email, phone, date, time, guests, special_requests) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+            [name, email, phone, date, time, guests, specialRequests || '']
+        );
+        res.json({ id: rows[0].id, message: 'Reservation created successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.get('/api/reservations', authenticateToken, (req, res) => {
-    db.all("SELECT * FROM reservations ORDER BY created_at DESC", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        // Map database fields to frontend expectations
+app.get('/api/reservations', authenticateToken, async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT * FROM reservations ORDER BY created_at DESC");
         const mappedRows = rows.map(row => ({
             id: row.id.toString(),
             name: row.name,
@@ -276,158 +272,171 @@ app.get('/api/reservations', authenticateToken, (req, res) => {
             status: row.status || 'pending',
             createdAt: row.created_at
         }));
-
         res.json(mappedRows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.put('/api/reservations/:id/status', authenticateToken, (req, res) => {
+app.put('/api/reservations/:id/status', authenticateToken, async (req, res) => {
     const { status } = req.body;
-    db.run("UPDATE reservations SET status = ? WHERE id = ?", [status, req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        await db.query("UPDATE reservations SET status = $1 WHERE id = $2", [status, req.params.id]);
         res.json({ message: 'Reservation status updated successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.delete('/api/reservations/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM reservations WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/reservations/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM reservations WHERE id = $1", [req.params.id]);
         res.json({ message: 'Reservation deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Contact Messages Routes ---
 
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', async (req, res) => {
     const { name, email, subject, message } = req.body;
-    db.run("INSERT INTO messages (name, email, subject, message) VALUES (?, ?, ?, ?)",
-        [name, email, subject, message],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, message: 'Message sent successfully' });
-        }
-    );
+    try {
+        const { rows } = await db.query(
+            "INSERT INTO messages (name, email, subject, message) VALUES ($1, $2, $3, $4) RETURNING id",
+            [name, email, subject, message]
+        );
+        res.json({ id: rows[0].id, message: 'Message sent successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.get('/api/messages', authenticateToken, (req, res) => {
-    db.all("SELECT * FROM messages ORDER BY created_at DESC", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        // Map database fields to frontend expectations
+app.get('/api/messages', authenticateToken, async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT * FROM messages ORDER BY created_at DESC");
         const mappedRows = rows.map(row => ({
             id: row.id.toString(),
             name: row.name,
             email: row.email,
             subject: row.subject,
             message: row.message,
-            status: row.status || (row.read ? 'read' : 'unread'), // Fallback for old data
+            status: row.status || (row.read ? 'read' : 'unread'),
             createdAt: row.created_at
         }));
-
         res.json(mappedRows);
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.put('/api/messages/:id/status', authenticateToken, (req, res) => {
+app.put('/api/messages/:id/status', authenticateToken, async (req, res) => {
     const { status } = req.body;
-
-    // Validate status
     const validStatuses = ['unread', 'read', 'replied', 'archived'];
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status value' });
     }
 
-    db.run("UPDATE messages SET status = ? WHERE id = ?", [status, req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        await db.query("UPDATE messages SET status = $1 WHERE id = $2", [status, req.params.id]);
         res.json({ message: 'Status updated successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.delete('/api/messages/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM messages WHERE id = ?", [req.params.id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/messages/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM messages WHERE id = $1", [req.params.id]);
         res.json({ message: 'Message deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Visitor Counter Routes ---
 
-app.get('/api/visitors', (req, res) => {
-    db.get("SELECT value FROM site_content WHERE key = 'site_visitors'", [], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        const count = row ? JSON.parse(row.value).count : 0;
+app.get('/api/visitors', async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT value FROM site_content WHERE key = 'site_visitors'");
+        const count = rows[0] ? JSON.parse(rows[0].value).count : 0;
         res.json({ count });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/visitors/increment', (req, res) => {
-    db.get("SELECT value FROM site_content WHERE key = 'site_visitors'", [], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-
+app.post('/api/visitors/increment', async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT value FROM site_content WHERE key = 'site_visitors'");
         let count = 0;
-        if (row) {
-            try { count = JSON.parse(row.value).count; } catch (e) { }
+        if (rows[0]) {
+            try { count = JSON.parse(rows[0].value).count; } catch (e) { }
         }
 
         count += 1;
         const value = JSON.stringify({ count });
 
-        db.run("INSERT INTO site_content (key, value) VALUES ('site_visitors', ?) ON CONFLICT(key) DO UPDATE SET value = ?",
-            [value, value],
-            function (err) {
-                if (err) return res.status(500).json({ error: err.message });
-                res.json({ count });
-            }
+        await db.query(
+            "INSERT INTO site_content (key, value) VALUES ('site_visitors', $1) ON CONFLICT(key) DO UPDATE SET value = $2",
+            [value, value]
         );
-    });
+        res.json({ count });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/visitors/reset', authenticateToken, (req, res) => {
+app.post('/api/visitors/reset', authenticateToken, async (req, res) => {
     const value = JSON.stringify({ count: 0 });
-    db.run("INSERT INTO site_content (key, value) VALUES ('site_visitors', ?) ON CONFLICT(key) DO UPDATE SET value = ?",
-        [value, value],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ count: 0, message: 'Visitor count reset' });
-        }
-    );
+    try {
+        await db.query(
+            "INSERT INTO site_content (key, value) VALUES ('site_visitors', $1) ON CONFLICT(key) DO UPDATE SET value = $2",
+            [value, value]
+        );
+        res.json({ count: 0, message: 'Visitor count reset' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Site Content Routes ---
 
-app.get('/api/content/:key', (req, res) => {
-    db.get("SELECT value FROM site_content WHERE key = ?", [req.params.key], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.json(null);
+app.get('/api/content/:key', async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT value FROM site_content WHERE key = $1", [req.params.key]);
+        if (!rows[0]) return res.json(null);
         try {
-            res.json(JSON.parse(row.value));
+            res.json(JSON.parse(rows[0].value));
         } catch (e) {
-            res.json(row.value);
+            res.json(rows[0].value);
         }
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/content/:key', authenticateToken, (req, res) => {
+app.post('/api/content/:key', authenticateToken, async (req, res) => {
     const { key } = req.params;
     const value = JSON.stringify(req.body);
 
     console.log(`Saving content for key: ${key}, Size: ${(value.length / 1024 / 1024).toFixed(2)} MB`);
 
-    db.run("INSERT INTO site_content (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?",
-        [key, value, value],
-        function (err) {
-            if (err) {
-                console.error(`Database error saving ${key}:`, err);
-                return res.status(500).json({ error: err.message });
-            }
-            res.json({ message: 'Content updated' });
-        }
-    );
+    try {
+        await db.query(
+            "INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = $3",
+            [key, value, value]
+        );
+        res.json({ message: 'Content updated' });
+    } catch (err) {
+        console.error(`Database error saving ${key}:`, err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- Image Upload Routes ---
 
-app.post('/api/upload/image', authenticateToken, upload.single('image'), (req, res) => {
+app.post('/api/upload/image', authenticateToken, upload.single('image'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No image file provided' });
     }
@@ -435,65 +444,41 @@ app.post('/api/upload/image', authenticateToken, upload.single('image'), (req, r
     const { originalname, mimetype, buffer } = req.file;
     const base64Data = buffer.toString('base64');
 
-    db.run(
-        "INSERT INTO uploaded_images (filename, mimetype, data) VALUES (?, ?, ?)",
-        [originalname, mimetype, base64Data],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({
-                id: this.lastID,
-                filename: originalname,
-                url: `/api/images/${this.lastID}`
-            });
-        }
-    );
+    try {
+        const { rows } = await db.query(
+            "INSERT INTO uploaded_images (filename, mimetype, data) VALUES ($1, $2, $3) RETURNING id",
+            [originalname, mimetype, base64Data]
+        );
+        res.json({
+            id: rows[0].id,
+            filename: originalname,
+            url: `/api/images/${rows[0].id}`
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.get('/api/images/:id', (req, res) => {
-    db.get("SELECT * FROM uploaded_images WHERE id = ?", [req.params.id], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (!row) return res.status(404).json({ error: 'Image not found' });
+app.get('/api/images/:id', async (req, res) => {
+    try {
+        const { rows } = await db.query("SELECT * FROM uploaded_images WHERE id = $1", [req.params.id]);
+        if (!rows[0]) return res.status(404).json({ error: 'Image not found' });
 
         // Return as data URL
-        const dataUrl = `data:${row.mimetype};base64,${row.data}`;
-        res.json({ id: row.id, filename: row.filename, dataUrl });
-    });
+        const dataUrl = `data:${rows[0].mimetype};base64,${rows[0].data}`;
+        res.json({ id: rows[0].id, filename: rows[0].filename, dataUrl });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// --- User Management Routes ---
-
-app.get('/api/users', authenticateToken, (req, res) => {
-    db.all("SELECT id, name, email, role, created_at FROM users", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
-
-app.post('/api/users', authenticateToken, (req, res) => {
-    const { name, email, password, role } = req.body;
-    const hashedPassword = bcrypt.hashSync(password, 10);
-
-    db.run("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-        [name, email, hashedPassword, role || 'admin'],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, name, email, role });
-        }
-    );
-});
-
-app.delete('/api/users/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM users WHERE id = ?", req.params.id, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'User deleted successfully' });
-    });
-});
-
-app.delete('/api/images/:id', authenticateToken, (req, res) => {
-    db.run("DELETE FROM uploaded_images WHERE id = ?", req.params.id, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
+app.delete('/api/images/:id', authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM uploaded_images WHERE id = $1", [req.params.id]);
         res.json({ message: 'Image deleted successfully' });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 app.listen(PORT, () => {

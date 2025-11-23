@@ -1,43 +1,25 @@
-import sqlite3 from 'sqlite3';
+import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-// Resolve __dirname for ESM and compute a sane default database path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { Pool } = pg;
 
-// Use DATABASE_PATH exactly as provided in the environment when present.
-// This keeps behavior consistent with the value in `.env.example` (for example `./server/database.sqlite`).
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database.sqlite');
-
-// Ensure parent directory exists so SQLite can create the file. We do not rewrite
-// relative env paths — we create the directory relative to the current process
-// working directory when a relative path is supplied (this matches typical dev setups).
-const dbDir = path.dirname(dbPath);
-try {
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-} catch (e) {
-  console.error('Failed to create database directory', dbDir, e && e.message);
-}
-
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database at', dbPath, err.message);
-  } else {
-    console.log('Connected to the SQLite database at', dbPath);
-    initDb();
-  }
+// Database connection configuration
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-const initDb = () => {
-  db.serialize(() => {
+// Helper to run queries
+const query = (text, params) => pool.query(text, params);
+
+const initDb = async () => {
+  try {
     // Users Table
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    await query(`CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
       email TEXT UNIQUE,
       password TEXT,
       name TEXT,
@@ -45,53 +27,64 @@ const initDb = () => {
     )`);
 
     // Menu Items Table
-    db.run(`CREATE TABLE IF NOT EXISTS menu_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    await query(`CREATE TABLE IF NOT EXISTS menu_items (
+      id SERIAL PRIMARY KEY,
       name TEXT,
       description TEXT,
       price REAL,
       category TEXT,
       image_url TEXT,
-      available BOOLEAN DEFAULT 1
+      available BOOLEAN DEFAULT true,
+      featured BOOLEAN DEFAULT false
+    )`);
+
+    // Categories Table (Missing in previous schema but used in index.js)
+    await query(`CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      description TEXT,
+      display_order INTEGER DEFAULT 99
     )`);
 
     // Reservations Table
-    db.run(`CREATE TABLE IF NOT EXISTS reservations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    await query(`CREATE TABLE IF NOT EXISTS reservations (
+      id SERIAL PRIMARY KEY,
       name TEXT,
       email TEXT,
       phone TEXT,
       date TEXT,
       time TEXT,
       guests INTEGER,
+      special_requests TEXT,
       status TEXT DEFAULT 'pending',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`);
 
     // Contact Messages Table
-    db.run(`CREATE TABLE IF NOT EXISTS messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    await query(`CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
       name TEXT,
       email TEXT,
       subject TEXT,
       message TEXT,
-      read BOOLEAN DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      status TEXT DEFAULT 'unread',
+      read BOOLEAN DEFAULT false,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`);
 
     // Site Content Table (Key-Value Store)
-    db.run(`CREATE TABLE IF NOT EXISTS site_content (
+    await query(`CREATE TABLE IF NOT EXISTS site_content (
       key TEXT PRIMARY KEY,
       value TEXT
     )`);
 
     // Uploaded Images Table
-    db.run(`CREATE TABLE IF NOT EXISTS uploaded_images (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+    await query(`CREATE TABLE IF NOT EXISTS uploaded_images (
+      id SERIAL PRIMARY KEY,
       filename TEXT,
       mimetype TEXT,
       data TEXT,
-      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`);
 
     // Seed Default Content
@@ -164,21 +157,30 @@ const initDb = () => {
       })
     };
 
-    Object.entries(defaultContent).forEach(([key, value]) => {
-      db.run("INSERT OR IGNORE INTO site_content (key, value) VALUES (?, ?)", [key, value]);
-    });
+    for (const [key, value] of Object.entries(defaultContent)) {
+      await query("INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING", [key, value]);
+    }
 
     // Seed Admin User
     const adminEmail = 'admin@oseiserwaa.com';
-    db.get("SELECT * FROM users WHERE email = ?", [adminEmail], (err, row) => {
-      if (!row) {
-        const passwordHash = bcrypt.hashSync('admin123', 10);
-        db.run("INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)",
-          [adminEmail, passwordHash, 'Admin User', 'admin']);
-        console.log('Admin user created.');
-      }
-    });
-  });
+    const { rows } = await query("SELECT * FROM users WHERE email = $1", [adminEmail]);
+    if (rows.length === 0) {
+      const passwordHash = bcrypt.hashSync('admin123', 10);
+      await query("INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4)",
+        [adminEmail, passwordHash, 'Admin User', 'admin']);
+      console.log('Admin user created.');
+    }
+
+    console.log('Database initialized successfully');
+  } catch (err) {
+    console.error('Error initializing database:', err);
+  }
 };
 
-export default db;
+// Initialize DB on start
+initDb();
+
+export default {
+  query,
+  pool
+};

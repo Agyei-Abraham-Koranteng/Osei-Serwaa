@@ -1,6 +1,5 @@
 # Render service configuration for "Create a new service from repo"
-# This file provides a minimal configuration to build and start the app on Render.
-# IMPORTANT: Set `SECRET_KEY` in the Render dashboard (do NOT commit secrets here).
+# This file provides a configuration to build and start the app on Render with a PostgreSQL database.
 
 services:
   - type: web
@@ -13,20 +12,14 @@ services:
       - key: NODE_ENV
         value: production
       - key: SECRET_KEY
-        fromSecret: SECRET_KEY
-      - key: DATABASE_PATH
-        value: /data/database.sqlite
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: osei-serwaa-db
+          property: connectionString
 
-# Notes:
-# - Free plan: Render instances have ephemeral filesystem; the SQLite file
-#   will not be reliably persisted across deploys or instance restarts unless
-#   you attach a persistent disk and set DATABASE_PATH to a path on that disk.
-# - When creating the service from the repo, add a Persistent Disk in the
-#   Render UI and mount it at `/data` (or adjust the path above). Alternatively
-#   migrate to a managed DB (Postgres, MySQL) for production.
-
-# Define a persistent disk resource. The Render UI will also ask to attach a
-# disk when creating the service from repo. Adjust `sizeGB` as needed.
-disks:
-  - name: db-data
-    sizeGB: 10
+databases:
+  - name: osei-serwaa-db
+    databaseName: osei_serwaa
+    user: osei_serwaa_user
+    plan: free # Explicitly request the free tier
