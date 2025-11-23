@@ -1,73 +1,168 @@
-# Welcome to your Lovable project
+# Osei Serwaa Kitchen
 
-## Project info
+A modern, full-stack restaurant management system for authentic Ghanaian cuisine, featuring a beautiful public-facing website and comprehensive admin portal.
 
-**URL**: https://lovable.dev/projects/6cfeb588-6c21-4cea-a5bf-1901283b39ee
+## 🌟 Features
 
-## How can I edit this code?
+### Public Website
+- **Home Page**: Engaging hero section with featured dishes and restaurant highlights
+- **Menu**: Browse authentic Ghanaian dishes organized by categories
+- **About**: Learn about our story, values, and team
+- **Contact**: Get in touch with location, hours, and contact form
+- **Reservations**: Easy online table booking system
 
-There are several ways of editing your application.
+### Admin Portal
+- **Dashboard**: Overview of reservations, messages, and site analytics
+- **Menu Management**: Add, edit, and manage menu items with images
+- **Category Management**: Organize menu categories
+- **Reservations**: View and manage table bookings with status tracking
+- **Contact Messages**: Handle customer inquiries with status filters
+- **About Page Management**: Update story, values, and team information
+- **User Management**: Manage admin users and permissions
+- **CSV Export**: Download reservations and messages data
 
-**Use Lovable**
+## 🚀 Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6cfeb588-6c21-4cea-a5bf-1901283b39ee) and start prompting.
+### Frontend
+- **React** with TypeScript
+- **Vite** for fast development and building
+- **Tailwind CSS** for styling
+- **shadcn/ui** for beautiful UI components
+- **Lucide React** for icons
+- **React Router** for navigation
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
+- **Node.js** with Express
+- **SQLite** database for data persistence
+- **JWT** for authentication
+- **bcryptjs** for password hashing
+- **Multer** for image uploads
 
-**Use your preferred IDE**
+## 📋 Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v16 or higher)
+- npm or yarn
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🛠️ Installation
 
-Follow these steps:
+### 1. Clone the repository
+```bash
+git clone https://github.com/Agyei-Abraham-Koranteng/Osei-Serwaa.git
+cd Osei-Serwaa
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 2. Install dependencies
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+**Frontend:**
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+**Backend:**
+```bash
+cd server
+npm install
+cd ..
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Start the development servers
+
+**Terminal 1 - Frontend:**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Terminal 2 - Backend:**
+```bash
+cd server
+npm run dev
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The frontend will run on `http://localhost:8080` and the backend on `http://localhost:3001`.
 
-**Use GitHub Codespaces**
+## 🔐 Admin Access
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Default admin credentials:
+- **Email**: admin@oseiserwaa.com
+- **Password**: admin123
 
-## What technologies are used for this project?
+⚠️ **Important**: Change these credentials in production!
 
-This project is built with:
+## 📁 Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```
+osei-serwaa-kitchen-app/
+├── src/                      # Frontend source code
+│   ├── components/          # Reusable React components
+│   │   ├── admin/          # Admin-specific components
+│   │   └── ui/             # shadcn/ui components
+│   ├── context/            # React Context (RestaurantContext)
+│   ├── pages/              # Page components
+│   │   ├── admin/          # Admin portal pages
+│   │   └── public pages    # Public website pages
+│   ├── utils/              # Utility functions
+│   └── App.tsx             # Main app component
+├── server/                  # Backend source code
+│   ├── index.js            # Express server
+│   ├── db.js               # Database initialization
+│   └── database.sqlite     # SQLite database file
+└── public/                  # Static assets
+```
 
-## How can I deploy this project?
+## 🗄️ Database Schema
 
-Simply open [Lovable](https://lovable.dev/projects/6cfeb588-6c21-4cea-a5bf-1901283b39ee) and click on Share -> Publish.
+The SQLite database includes tables for:
+- **users**: Admin users with authentication
+- **menu_items**: Restaurant menu items
+- **reservations**: Table bookings
+- **messages**: Contact form submissions
+- **site_content**: Page content (JSON stored as text)
+- **uploaded_images**: Base64 encoded images
 
-## Can I connect a custom domain to my Lovable project?
+## 🎨 Customization
 
-Yes, you can!
+### Update Restaurant Information
+Edit the default content in `server/db.js` to customize:
+- Restaurant name and description
+- Contact information
+- Business hours
+- About page content
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Styling
+- Main theme colors are defined in `src/index.css`
+- Tailwind configuration in `tailwind.config.ts`
+- Component styles use Tailwind utility classes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📦 Building for Production
+
+### Frontend
+```bash
+npm run build
+```
+
+### Backend
+The backend runs as-is in production. Ensure you:
+1. Set proper environment variables
+2. Use a production-grade database
+3. Enable HTTPS
+4. Update CORS settings
+
+## 🔒 Security Notes
+
+- Change default admin credentials
+- Use environment variables for sensitive data
+- Implement rate limiting for API endpoints
+- Enable HTTPS in production
+- Regularly update dependencies
+
+## 📝 License
+
+This project is private and proprietary.
+
+## 👥 Contact
+
+For questions or support, contact: hello@oseiserwaa.com
+
+---
+
+Built with ❤️ for authentic Ghanaian cuisine
