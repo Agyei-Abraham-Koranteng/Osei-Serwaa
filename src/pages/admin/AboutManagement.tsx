@@ -211,7 +211,7 @@ const AboutManagement = () => {
                     <Card className="border-border/50 shadow-lg">
                         <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
                             <CardTitle className="text-2xl">Our Story</CardTitle>
-                            <CardDescription className="text-base">Edit the three story paragraphs</CardDescription>
+                            <CardDescription className="text-base">Edit the three story paragraphs and images</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 pt-6">
                             {[1, 2, 3].map(num => (
@@ -220,98 +220,129 @@ const AboutManagement = () => {
                                     <Textarea
                                         value={story[`paragraph${num}` as keyof typeof story] as string}
                                         onChange={e => setStory({ ...story, [`paragraph${num}`]: e.target.value })}
+                                        rows={3}
+                                        className="text-base border-border/50 focus:border-primary/50 resize-none"
+                                    />
+                                </div>
+                            ))}
+                            <div className="space-y-4 pt-4 border-t border-border/50">
+                                <Label className="text-lg font-semibold">Story Images</Label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {(story.images || []).map((img, index) => (
+                                        <ImageUpload
+                                            key={index}
+                                            label={`Image ${index + 1}`}
+                                            value={img}
+                                            onChange={url => {
+                                                const newImages = [...(story.images || [])];
+                                                newImages[index] = url;
+                                                setStory({ ...story, images: newImages });
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                                <Button onClick={() => setStory({ ...story, images: [...(story.images || []), ''] })} variant="outline" className="w-full h-12 text-base font-semibold">
+                                    <Plus className="h-5 w-5 mr-2" />Add Image
+                                </Button>
+                            </div>
+                            <Button onClick={handleSaveStory} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
+                                <Save className="h-5 w-5 mr-2" />Save Story
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-                                        {/* Values Tab */}
+                {/* Values Tab */}
                 <TabsContent value="values" className="mt-0">
-                                        <Card className="border-border/50 shadow-lg">
-                                            <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
-                                                <CardTitle className="text-2xl">Our Values</CardTitle>
-                                                <CardDescription className="text-base">Manage the values displayed on the about page</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-6 pt-6">
-                                                {values.map((value, index) => (
-                                                    <div key={index} className="p-6 border-2 border-border/50 rounded-xl space-y-4 bg-gradient-to-br from-muted/20 to-background hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
-                                                        <div className="flex justify-between items-center">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <span className="text-sm font-bold text-primary">{index + 1}</span>
-                                                                </div>
-                                                                <h4 className="font-semibold text-lg">Value {index + 1}</h4>
-                                                            </div>
-                                                            <Button variant="destructive" size="sm" onClick={() => removeValue(index)}>
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                        <div className="space-y-3">
-                                                            <Label className="text-sm font-semibold">Title</Label>
-                                                            <Input value={value.title} onChange={e => updateValue(index, 'title', e.target.value)} className="border-border/50 focus:border-primary/50" />
-                                                        </div>
-                                                        <div className="space-y-3">
-                                                            <Label className="text-sm font-semibold">Description</Label>
-                                                            <Textarea value={value.description} onChange={e => updateValue(index, 'description', e.target.value)} rows={2} className="border-border/50 focus:border-primary/50 resize-none" />
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                <Button onClick={addValue} variant="outline" className="w-full h-12 text-base">
-                                                    <Plus className="h-5 w-5 mr-2" />Add Value
-                                                </Button>
-                                                <Button onClick={handleSaveValues} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
-                                                    <Save className="h-5 w-5 mr-2" />Save Values
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
+                    <Card className="border-border/50 shadow-lg">
+                        <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
+                            <CardTitle className="text-2xl">Our Values</CardTitle>
+                            <CardDescription className="text-base">Manage the values displayed on the about page</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6 pt-6">
+                            {values.map((value, index) => (
+                                <div key={index} className="p-6 border-2 border-border/50 rounded-xl space-y-4 bg-gradient-to-br from-muted/20 to-background hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <span className="text-sm font-bold text-primary">{index + 1}</span>
+                                            </div>
+                                            <h4 className="font-semibold text-lg">Value {index + 1}</h4>
+                                        </div>
+                                        <Button variant="destructive" size="sm" onClick={() => removeValue(index)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-semibold">Title</Label>
+                                        <Input value={value.title} onChange={e => updateValue(index, 'title', e.target.value)} className="border-border/50 focus:border-primary/50" />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-semibold">Description</Label>
+                                        <Textarea value={value.description} onChange={e => updateValue(index, 'description', e.target.value)} rows={2} className="border-border/50 focus:border-primary/50 resize-none" />
+                                    </div>
+                                </div>
+                            ))}
+                            <Button onClick={addValue} variant="outline" className="w-full h-12 text-base">
+                                <Plus className="h-5 w-5 mr-2" />Add Value
+                            </Button>
+                            <Button onClick={handleSaveValues} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
+                                <Save className="h-5 w-5 mr-2" />Save Values
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-                                    {/* Team Tab */}
-                                    <TabsContent value="team" className="mt-0">
-                                        <Card className="border-border/50 shadow-lg">
-                                            <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
-                                                <CardTitle className="text-2xl">Our Team</CardTitle>
-                                                <CardDescription className="text-base">Manage team members displayed on the about page</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="space-y-6 pt-6">
-                                                {team.map((member, index) => (
-                                                    <div key={index} className="p-6 border-2 border-border/50 rounded-xl space-y-4 bg-gradient-to-br from-muted/20 to-background hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
-                                                        <div className="flex justify-between items-center">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                    <span className="text-sm font-bold text-primary">{index + 1}</span>
-                                                                </div>
-                                                                <h4 className="font-semibold text-lg">Team Member {index + 1}</h4>
-                                                            </div>
-                                                            <Button variant="destructive" size="sm" onClick={() => removeTeamMember(index)}>
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-3">
-                                                                <Label className="text-sm font-semibold">Name</Label>
-                                                                <Input value={member.name} onChange={e => updateTeamMember(index, 'name', e.target.value)} className="border-border/50 focus:border-primary/50" />
-                                                            </div>
-                                                            <div className="space-y-3">
-                                                                <Label className="text-sm font-semibold">Role</Label>
-                                                                <Input value={member.role} onChange={e => updateTeamMember(index, 'role', e.target.value)} className="border-border/50 focus:border-primary/50" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-3">
-                                                            <Label className="text-sm font-semibold">Description</Label>
-                                                            <Textarea value={member.description} onChange={e => updateTeamMember(index, 'description', e.target.value)} rows={2} className="border-border/50 focus:border-primary/50 resize-none" />
-                                                        </div>
-                                                        <ImageUpload label="Profile Image" value={member.image} onChange={url => updateTeamMember(index, 'image', url)} />
-                                                    </div>
-                                                ))}
-                                                <Button onClick={addTeamMember} variant="outline" className="w-full h-12 text-base">
-                                                    <Plus className="h-5 w-5 mr-2" />Add Team Member
-                                                </Button>
-                                                <Button onClick={handleSaveTeam} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
-                                                    <Save className="h-5 w-5 mr-2" />Save Team
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
-                                </Tabs>
+                {/* Team Tab */}
+                <TabsContent value="team" className="mt-0">
+                    <Card className="border-border/50 shadow-lg">
+                        <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
+                            <CardTitle className="text-2xl">Our Team</CardTitle>
+                            <CardDescription className="text-base">Manage team members displayed on the about page</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6 pt-6">
+                            {team.map((member, index) => (
+                                <div key={index} className="p-6 border-2 border-border/50 rounded-xl space-y-4 bg-gradient-to-br from-muted/20 to-background hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <span className="text-sm font-bold text-primary">{index + 1}</span>
+                                            </div>
+                                            <h4 className="font-semibold text-lg">Team Member {index + 1}</h4>
+                                        </div>
+                                        <Button variant="destructive" size="sm" onClick={() => removeTeamMember(index)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-semibold">Name</Label>
+                                            <Input value={member.name} onChange={e => updateTeamMember(index, 'name', e.target.value)} className="border-border/50 focus:border-primary/50" />
+                                        </div>
+                                        <div className="space-y-3">
+                                            <Label className="text-sm font-semibold">Role</Label>
+                                            <Input value={member.role} onChange={e => updateTeamMember(index, 'role', e.target.value)} className="border-border/50 focus:border-primary/50" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-semibold">Description</Label>
+                                        <Textarea value={member.description} onChange={e => updateTeamMember(index, 'description', e.target.value)} rows={2} className="border-border/50 focus:border-primary/50 resize-none" />
+                                    </div>
+                                    <ImageUpload label="Profile Image" value={member.image} onChange={url => updateTeamMember(index, 'image', url)} />
+                                </div>
+                            ))}
+                            <Button onClick={addTeamMember} variant="outline" className="w-full h-12 text-base">
+                                <Plus className="h-5 w-5 mr-2" />Add Team Member
+                            </Button>
+                            <Button onClick={handleSaveTeam} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
+                                <Save className="h-5 w-5 mr-2" />Save Team
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
-                        );
+    );
 };
 
-                        export default AboutManagement;
+export default AboutManagement;

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useRestaurant, Reservation } from '@/context/RestaurantContext';
+import { exportToCSV } from '@/utils/exportCSV';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Search, CheckCircle, XCircle, Clock, Users, Phone, Mail, Trash2 } from 'lucide-react';
+import { Calendar, Search, CheckCircle, XCircle, Clock, Users, Phone, Mail, Trash2, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     AlertDialog,
@@ -59,6 +60,35 @@ const ReservationsManagement = () => {
             });
             setReservationToDelete(null);
         }
+    };
+
+    const handleExportReservations = () => {
+        if (reservations.length === 0) {
+            toast({
+                title: 'No Data',
+                description: 'There are no reservations to export.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        const exportData = reservations.map(r => ({
+            'ID': r.id,
+            'Name': r.name,
+            'Email': r.email,
+            'Phone': r.phone,
+            'Date': r.date,
+            'Time': r.time,
+            'Guests': r.guests,
+            'Status': r.status,
+            'Created At': new Date(r.createdAt).toLocaleString()
+        }));
+
+        exportToCSV(exportData, 'reservations');
+        toast({
+            title: '✅ Exported',
+            description: `${reservations.length} reservations exported successfully`
+        });
     };
 
     return (
@@ -114,14 +144,20 @@ const ReservationsManagement = () => {
                         <TabsTrigger value="pending" className="h-10 rounded-lg">Pending</TabsTrigger>
                         <TabsTrigger value="confirmed" className="h-10 rounded-lg">Confirmed</TabsTrigger>
                     </TabsList>
-                    <div className="relative w-72">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 h-12 border-border/50 focus:border-primary/50"
-                        />
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-72">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search by name or email..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 h-12 border-border/50 focus:border-primary/50"
+                            />
+                        </div>
+                        <Button onClick={handleExportReservations} variant="outline" className="h-12">
+                            <Download className="h-4 w-4 mr-2" />
+                            Export CSV
+                        </Button>
                     </div>
                 </div>
 

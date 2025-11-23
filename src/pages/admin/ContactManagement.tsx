@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRestaurant, ContactMessage } from '@/context/RestaurantContext';
+import { exportToCSV } from '@/utils/exportCSV';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ImageUpload } from '@/components/admin/ImageUpload';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Trash2, Eye, Mail, Sparkles, MapPin, Phone, Clock, Archive, Loader2 } from 'lucide-react';
+import { Save, Trash2, Eye, Mail, Sparkles, MapPin, Phone, Clock, Archive, Loader2, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const ContactManagement = () => {
@@ -114,6 +115,33 @@ const ContactManagement = () => {
         }
         setDeleteDialogOpen(false);
         setDeleteMessageId(null);
+    };
+
+    const handleExportMessages = () => {
+        if (contactMessages.length === 0) {
+            toast({
+                title: 'No Data',
+                description: 'There are no messages to export.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        const exportData = contactMessages.map(m => ({
+            'ID': m.id,
+            'Name': m.name,
+            'Email': m.email,
+            'Subject': m.subject,
+            'Message': m.message,
+            'Status': m.status,
+            'Created At': new Date(m.createdAt).toLocaleString()
+        }));
+
+        exportToCSV(exportData, 'contact_messages');
+        toast({
+            title: '✅ Exported',
+            description: `${contactMessages.length} messages exported successfully`
+        });
     };
 
     return (
@@ -320,8 +348,16 @@ const ContactManagement = () => {
                 <TabsContent value="messages" className="mt-0">
                     <Card className="border-border/50 shadow-lg">
                         <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
-                            <CardTitle className="text-2xl">Messages</CardTitle>
-                            <CardDescription className="text-base">View and manage contact form submissions</CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="text-2xl">Messages</CardTitle>
+                                    <CardDescription className="text-base">View and manage contact form submissions</CardDescription>
+                                </div>
+                                <Button onClick={handleExportMessages} variant="outline">
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Export CSV
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="pt-6">
                             {/* Status Filter Tabs */}
