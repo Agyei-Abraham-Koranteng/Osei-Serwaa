@@ -5,10 +5,8 @@
 services:
   - type: web
     name: osei-serwaa-kitchen
-    env: node
     branch: main
-    # Use an appropriate plan (free, starter, standard, etc.) or omit to use default
-    # plan: free
+    runtime: node
     buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
@@ -19,6 +17,8 @@ services:
       - key: DATABASE_PATH
         value: ./server/database.sqlite
 
-# If you need SQLite persistence between deploys, add a persistent disk in the
-# Render dashboard and set DATABASE_PATH to the disk path (for example `/data/database.sqlite`).
-# You can also extend this file with a disk section if you prefer to configure disks in YAML.
+# Notes:
+# - Free plan: Render instances have ephemeral filesystem; the SQLite file
+#   will not be reliably persisted across deploys or instance restarts.
+# - For production persistence: upgrade the service or use a managed DB
+#   (Postgres, MySQL) and set a connection string environment variable.
