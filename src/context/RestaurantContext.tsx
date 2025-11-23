@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3001';
 
 // Types
 export interface MenuItem {
@@ -205,7 +205,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/content/${key}`, {
+      const res = await fetch(`${API_URL}/api/content/${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(value),
@@ -223,13 +223,13 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   // Initial data fetch
   useEffect(() => {
     // Fetch menu items
-    fetch('http://localhost:3001/api/menu')
+    fetch(`${API_URL}/api/menu`)
       .then(r => r.json())
       .then(data => setMenuItems(data))
       .catch(err => console.error('Error fetching menu:', err));
 
     // Fetch visitor count
-    fetch('http://localhost:3001/api/visitors')
+    fetch(`${API_URL}/api/visitors`)
       .then(r => r.json())
       .then(data => setSiteVisitors(data.count))
       .catch(err => console.error('Error fetching visitors:', err));
@@ -238,7 +238,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (token) {
       // Fetch contact messages
-      fetch('http://localhost:3001/api/messages', {
+      fetch(`${API_URL}/api/messages`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(r => r.json())
@@ -246,7 +246,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         .catch(err => console.error('Error fetching messages:', err));
 
       // Fetch reservations
-      fetch('http://localhost:3001/api/reservations', {
+      fetch(`${API_URL}/api/reservations`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(r => r.json())
@@ -254,7 +254,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         .catch(err => console.error('Error fetching reservations:', err));
 
       // Fetch users
-      fetch('http://localhost:3001/api/users', {
+      fetch(`${API_URL}/api/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(r => {
@@ -279,13 +279,13 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const fetchContent = async () => {
       try {
         const [home, about, contact, gallery, heroImgs, heroTxts, footer] = await Promise.all([
-          fetch('http://localhost:3001/api/content/home_content').then(r => r.json()),
-          fetch('http://localhost:3001/api/content/about_content').then(r => r.json()),
-          fetch('http://localhost:3001/api/content/contact_page').then(r => r.json()),
-          fetch('http://localhost:3001/api/content/gallery_images').then(r => r.json()),
-          fetch('http://localhost:3001/api/content/hero_images').then(r => r.json()),
-          fetch('http://localhost:3001/api/content/hero_texts').then(r => r.json()),
-          fetch('http://localhost:3001/api/content/footer').then(r => r.json()),
+          fetch(`${API_URL}/api/content/home_content`).then(r => r.json()),
+          fetch(`${API_URL}/api/content/about_content`).then(r => r.json()),
+          fetch(`${API_URL}/api/content/contact_page`).then(r => r.json()),
+          fetch(`${API_URL}/api/content/gallery_images`).then(r => r.json()),
+          fetch(`${API_URL}/api/content/hero_images`).then(r => r.json()),
+          fetch(`${API_URL}/api/content/hero_texts`).then(r => r.json()),
+          fetch(`${API_URL}/api/content/footer`).then(r => r.json()),
         ]);
         if (home) setHomeContentState(home);
         if (about) setAboutContentState(about);
@@ -343,7 +343,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch('http://localhost:3001/api/menu', {
+      const res = await fetch(`${API_URL}/api/menu`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(item),
@@ -361,7 +361,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/menu/${id}`, {
+      const res = await fetch(`${API_URL}/api/menu/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(updates),
@@ -378,7 +378,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/menu/${id}`, {
+      const res = await fetch(`${API_URL}/api/menu/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -391,7 +391,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   // Reservation functions
   const addReservation = async (reservation: Omit<Reservation, 'id' | 'createdAt'>) => {
     try {
-      const res = await fetch('http://localhost:3001/api/reservations', {
+      const res = await fetch(`${API_URL}/api/reservations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reservation),
@@ -410,7 +410,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/reservations/${id}/status`, {
+      const res = await fetch(`${API_URL}/api/reservations/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status }),
@@ -427,7 +427,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/reservations/${id}`, {
+      const res = await fetch(`${API_URL}/api/reservations/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -442,7 +442,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   // Contact message functions
   const addContactMessage = async (message: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) => {
     try {
-      const res = await fetch('http://localhost:3001/api/messages', {
+      const res = await fetch(`${API_URL}/api/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(message),
@@ -461,7 +461,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/messages/${id}/status`, {
+      const res = await fetch(`${API_URL}/api/messages/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status }),
@@ -478,7 +478,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/messages/${id}`, {
+      const res = await fetch(`${API_URL}/api/messages/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -495,7 +495,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch('http://localhost:3001/api/users', {
+      const res = await fetch(`${API_URL}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(user),
@@ -513,7 +513,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${id}`, {
+      const res = await fetch(`${API_URL}/api/users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -572,7 +572,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const res = await fetch('http://localhost:3001/api/visitors/increment', { method: 'POST' });
+      const res = await fetch(`${API_URL}/api/visitors/increment`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setSiteVisitors(data.count);
@@ -588,63 +588,60 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:3001/api/visitors/reset', {
+      const res = await fetch(`${API_URL}/api/visitors/reset`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         setSiteVisitors(0);
       }
-    } catch (err) {
-      console.error('Error resetting visitors:', err);
-    }
-  };
 
-  const value: RestaurantContextType = {
-    menuItems,
-    categories,
-    addMenuItem,
-    updateMenuItem,
-    deleteMenuItem,
-    cart,
-    addToCart,
-    removeFromCart,
-    updateCartQuantity,
-    clearCart,
-    cartTotal,
-    reservations,
-    addReservation,
-    updateReservationStatus,
-    deleteReservation,
-    contactMessages,
-    addContactMessage,
-    updateContactMessageStatus,
-    deleteContactMessage,
-    users,
-    addUser,
-    deleteUser,
-    footerContent,
-    setFooterContent,
-    heroImages,
-    setHeroImage,
-    heroTexts,
-    setHeroText,
-    homeContent,
-    setHomeContent,
-    aboutContent,
-    setAboutContent,
-    galleryImages,
-    setGalleryImages,
-    contactPageInfo,
-    setContactPageInfo,
-    siteVisitors,
-    incrementSiteVisitors,
-    resetSiteVisitors,
-  };
 
-  return (
-    <RestaurantContext.Provider value={value}>
-      {children}
-    </RestaurantContext.Provider>
-  );
-};
+      const value: RestaurantContextType = {
+        menuItems,
+        categories,
+        addMenuItem,
+        updateMenuItem,
+        deleteMenuItem,
+        cart,
+        addToCart,
+        removeFromCart,
+        updateCartQuantity,
+        clearCart,
+        cartTotal,
+        reservations,
+        addReservation,
+        updateReservationStatus,
+        deleteReservation,
+        contactMessages,
+        addContactMessage,
+        updateContactMessageStatus,
+        deleteContactMessage,
+        users,
+        addUser,
+        deleteUser,
+        footerContent,
+        setFooterContent,
+        heroImages,
+        setHeroImage,
+        heroTexts,
+        setHeroText,
+        homeContent,
+        setHomeContent,
+        aboutContent,
+        setAboutContent,
+        galleryImages,
+        setGalleryImages,
+        contactPageInfo,
+        setContactPageInfo,
+        siteVisitors,
+        incrementSiteVisitors,
+        resetSiteVisitors,
+      };
+
+      return (
+        <RestaurantContext.Provider value={value}>
+          {children}
+        </RestaurantContext.Provider>
+      );
+    };
