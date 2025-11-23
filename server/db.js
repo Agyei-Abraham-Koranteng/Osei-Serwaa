@@ -1,12 +1,34 @@
 import sqlite3 from 'sqlite3';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-const dbPath = process.env.DATABASE_PATH || './database.sqlite';
+// Resolve __dirname for ESM and compute a sane default database path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// If DATABASE_PATH is set and is relative, resolve it relative to this file's directory.
+let dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'database.sqlite');
+if (process.env.DATABASE_PATH && !path.isAbsolute(process.env.DATABASE_PATH)) {
+  dbPath = path.resolve(__dirname, process.env.DATABASE_PATH);
+}
+
+// Ensure parent directory exists so SQLite can create the file
+const dbDir = path.dirname(dbPath);
+try {
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+} catch (e) {
+  console.error('Failed to create database directory', dbDir, e.message);
+}
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error opening database', err.message);
+    console.error('Error opening database at', dbPath, err.message);
   } else {
-    console.log('Connected to the SQLite database.');
+    console.log('Connected to the SQLite database at', dbPath);
     initDb();
   }
 });
