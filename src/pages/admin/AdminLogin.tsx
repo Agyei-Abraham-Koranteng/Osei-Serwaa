@@ -84,17 +84,7 @@ const AdminLogin = () => {
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
 
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground text-center">
-                <strong>Demo Credentials:</strong>
-              </p>
-              <p className="text-sm text-muted-foreground text-center mt-1">
-                Email: admin@oseiserwaa.com
-              </p>
-              <p className="text-sm text-muted-foreground text-center">
-                Password: admin123
-              </p>
-            </div>
+
           </form>
         </CardContent>
       </Card>

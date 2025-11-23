@@ -25,18 +25,6 @@ export const useAuth = () => {
   return context;
 };
 
-// Mock admin credentials (in real app, this would be handled by backend)
-const MOCK_ADMIN = {
-  email: 'admin@oseiserwaa.com',
-  password: 'admin123',
-  user: {
-    id: '1',
-    email: 'admin@oseiserwaa.com',
-    name: 'Admin User',
-    role: 'admin' as const,
-  },
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,25 +32,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check for saved session on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('restaurant-admin-user');
-    if (savedUser) {
+    const token = localStorage.getItem('auth_token');
+    if (savedUser && token) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock login validation
-    if (email === MOCK_ADMIN.email && password === MOCK_ADMIN.password) {
-      setUser(MOCK_ADMIN.user);
-      localStorage.setItem('restaurant-admin-user', JSON.stringify(MOCK_ADMIN.user));
-      return true;
+    try {
+      const response = await fetch('http://localhost:3001/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        localStorage.setItem('restaurant-admin-user', JSON.stringify(data.user));
+        localStorage.setItem('auth_token', data.token);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('restaurant-admin-user');
+    localStorage.removeItem('auth_token');
   };
 
   const value: AuthContextType = {

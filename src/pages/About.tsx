@@ -2,20 +2,43 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Users, Heart, Award, Utensils, ChefHat } from 'lucide-react';
 import heroRestaurant from '@/assets/hero-restaurant.jpg';
 import { useRestaurant } from '@/context/RestaurantContext';
+import { useState, useEffect } from 'react';
 
 const About = () => {
   const { heroImages, aboutContent, heroTexts } = useRestaurant();
-  const hero = heroImages.about || heroRestaurant;
+  const rawImages = heroImages?.about || [];
+  const validImages = rawImages.filter(url => url && url.trim() !== '');
+  const heroImagesArray = validImages.length > 0 ? validImages : [heroRestaurant];
+
   const heroTitle = heroTexts?.about?.title || 'About Us';
   const heroSubtitle = heroTexts?.about?.subtitle || aboutContent?.story?.paragraph1;
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (heroImagesArray.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImagesArray.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroImagesArray.length]);
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 scale-105 blur-[0.5px]">
-          <img src={hero} alt="About hero" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0">
+          {heroImagesArray.map((image, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <div className="absolute inset-0 scale-105 blur-[0.5px]">
+                <img src={image} alt={`About hero ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/60" />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="relative z-10 container mx-auto px-4 text-center py-20">
@@ -53,10 +76,26 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-5">
-            <div className="aspect-square bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl shadow-card hover:scale-105 transition-transform duration-500" />
-            <div className="aspect-square bg-gradient-to-br from-accent/20 to-secondary/20 rounded-2xl shadow-card hover:scale-105 transition-transform duration-500 mt-8" />
-            <div className="aspect-square bg-gradient-to-br from-secondary/20 to-primary/20 rounded-2xl shadow-card hover:scale-105 transition-transform duration-500 -mt-8" />
-            <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl shadow-card hover:scale-105 transition-transform duration-500" />
+            <img
+              src={aboutContent?.story?.images?.[0] || "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?auto=format&fit=crop&w=800&q=80"}
+              alt="Authentic Jollof Rice"
+              className="aspect-square object-cover rounded-2xl shadow-card hover:scale-105 transition-transform duration-500"
+            />
+            <img
+              src={aboutContent?.story?.images?.[1] || "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80"}
+              alt="Traditional Savory Dish"
+              className="aspect-square object-cover rounded-2xl shadow-card hover:scale-105 transition-transform duration-500 mt-8"
+            />
+            <img
+              src={aboutContent?.story?.images?.[2] || "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80"}
+              alt="Grilled Specialties"
+              className="aspect-square object-cover rounded-2xl shadow-card hover:scale-105 transition-transform duration-500 -mt-8"
+            />
+            <img
+              src={aboutContent?.story?.images?.[3] || "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=800&q=80"}
+              alt="Ghanaian Feast"
+              className="aspect-square object-cover rounded-2xl shadow-card hover:scale-105 transition-transform duration-500"
+            />
           </div>
         </div>
 

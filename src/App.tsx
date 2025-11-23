@@ -21,13 +21,13 @@ import Contact from "./pages/Contact";
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
 import Dashboard from "./pages/admin/Dashboard";
-import HomeContentManagement from "./pages/admin/HomeContentManagement";
+import HomeManagement from "./pages/admin/HomeManagement";
 import MenuManagement from "./pages/admin/MenuManagement";
-import AboutContentManagement from "./pages/admin/AboutContentManagement";
-import ReservationManagement from "./pages/admin/ReservationManagement";
+import AboutManagement from "./pages/admin/AboutManagement";
+import ReservationsManagement from "./pages/admin/ReservationsManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
-import ContactInfoManagement from "./pages/admin/ContactInfoManagement";
-import ContactMessagesManagement from "./pages/admin/ContactMessagesManagement";
+import ContactManagement from "./pages/admin/ContactManagement";
+import FooterManagement from "./pages/admin/FooterManagement";
 import ManageAdmins from "./pages/admin/ManageAdmins";
 
 import NotFound from "./pages/NotFound";
@@ -56,13 +56,13 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="home" element={<HomeContentManagement />} />
+                <Route path="home" element={<HomeManagement />} />
                 <Route path="menu" element={<MenuManagement />} />
-                <Route path="about" element={<AboutContentManagement />} />
-                <Route path="reservations" element={<ReservationManagement />} />
+                <Route path="about" element={<AboutManagement />} />
+                <Route path="reservations" element={<ReservationsManagement />} />
                 <Route path="gallery" element={<GalleryManagement />} />
-                <Route path="contact" element={<ContactInfoManagement />} />
-                <Route path="contact-messages" element={<ContactMessagesManagement />} />
+                <Route path="contact" element={<ContactManagement />} />
+                <Route path="footer" element={<FooterManagement />} />
                 <Route path="manage-admins" element={<ManageAdmins />} />
               </Route>
 

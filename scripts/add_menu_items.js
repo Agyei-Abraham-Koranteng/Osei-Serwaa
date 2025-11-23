@@ -1,0 +1,164 @@
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+
+const dbPath = path.join(__dirname, '../server/database.sqlite');
+
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err.message);
+        process.exit(1);
+    }
+    console.log('Connected to the SQLite database.');
+});
+
+// Authentic Ghanaian dishes to add
+const dishes = [
+    {
+        name: 'Jollof Rice',
+        description: 'Our signature West African rice dish cooked in a rich tomato sauce with aromatic spices, served with your choice of protein',
+        price: 45.00,
+        category: 'Main Dishes',
+        image_url: '/dish-jollof.jpg',
+        available: 1
+    },
+    {
+        name: 'Banku with Tilapia',
+        description: 'Traditional fermented corn and cassava dough served with grilled tilapia and spicy pepper sauce',
+        price: 55.00,
+        category: 'Main Dishes',
+        image_url: '/dish-banku.jpg',
+        available: 1
+    },
+    {
+        name: 'Waakye',
+        description: 'Rice and beans cooked with millet leaves, served with spaghetti, gari, boiled egg, and your choice of protein',
+        price: 40.00,
+        category: 'Main Dishes',
+        image_url: '/dish-waakye.jpg',
+        available: 1
+    },
+    {
+        name: 'Fufu with Light Soup',
+        description: 'Pounded cassava and plantain served with aromatic tomato-based soup and goat meat',
+        price: 50.00,
+        category: 'Main Dishes',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Red Red',
+        description: 'Black-eyed peas stew cooked in palm oil with plantains and gari',
+        price: 35.00,
+        category: 'Main Dishes',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Kelewele',
+        description: 'Spicy fried plantains seasoned with ginger, pepper, and aromatic spices',
+        price: 15.00,
+        category: 'Appetizers',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Chinchinga (Kebabs)',
+        description: 'Grilled skewered meat marinated in traditional spices and peanut powder',
+        price: 25.00,
+        category: 'Appetizers',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Groundnut Soup',
+        description: 'Rich peanut-based soup with chicken or beef, served with rice balls or fufu',
+        price: 48.00,
+        category: 'Soups',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Palmnut Soup',
+        description: 'Creamy palm fruit soup with assorted meats and fish, served with fufu',
+        price: 52.00,
+        category: 'Soups',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Sobolo (Hibiscus Drink)',
+        description: 'Refreshing hibiscus flower drink with ginger and pineapple',
+        price: 10.00,
+        category: 'Beverages',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Asana (Corn Drink)',
+        description: 'Traditional fermented corn drink, sweet and refreshing',
+        price: 8.00,
+        category: 'Beverages',
+        image_url: '',
+        available: 1
+    },
+    {
+        name: 'Bofrot (Puff Puff)',
+        description: 'Sweet fried dough balls, perfect with tea or as a snack',
+        price: 12.00,
+        category: 'Desserts',
+        image_url: '',
+        available: 1
+    }
+];
+
+db.serialize(() => {
+    // First, check if there are existing menu items
+    db.get("SELECT COUNT(*) as count FROM menu_items", (err, row) => {
+        if (err) {
+            console.error('Error checking menu items:', err);
+            return;
+        }
+
+        console.log(`Current menu items: ${row.count}`);
+
+        // Insert each dish
+        const stmt = db.prepare(`
+      INSERT INTO menu_items (name, description, price, category, image_url, available)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+        dishes.forEach((dish) => {
+            stmt.run(
+                dish.name,
+                dish.description,
+                dish.price,
+                dish.category,
+                dish.image_url,
+                dish.available,
+                (err) => {
+                    if (err) {
+                        console.error(`Error adding ${dish.name}:`, err.message);
+                    } else {
+                        console.log(`✓ Added: ${dish.name} - GH₵${dish.price}`);
+                    }
+                }
+            );
+        });
+
+        stmt.finalize(() => {
+            // Count total items after insertion
+            db.get("SELECT COUNT(*) as count FROM menu_items", (err, row) => {
+                if (err) {
+                    console.error('Error counting menu items:', err);
+                } else {
+                    console.log(`\nTotal menu items now: ${row.count}`);
+                }
+
+                db.close((err) => {
+                    if (err) console.error(err.message);
+                    console.log('Database connection closed.');
+                });
+            });
+        });
+    });
+});

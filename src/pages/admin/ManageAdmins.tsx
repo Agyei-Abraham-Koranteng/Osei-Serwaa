@@ -1,79 +1,185 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { useRestaurant } from '@/context/RestaurantContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
-import { useRestaurant } from '@/context/RestaurantContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { Users, UserPlus, Trash2, Shield, Mail, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const ManageAdmins = () => {
-  const restaurant = useRestaurant();
-  const [admins, setAdmins] = useState([
-    { id: 'admin-1', username: 'primary_admin', email: 'admin@example.com' },
-  ]);
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+    const { users, addUser, deleteUser } = useRestaurant();
+    const { toast } = useToast();
 
-  const handleAdd = () => {
-    if (!form.username || !form.email || !form.password) return;
-    setAdmins([
-      { id: `admin-${Date.now()}`, username: form.username, email: form.email },
-      ...admins,
-    ]);
-    setForm({ username: '', email: '', password: '' });
-  };
+    const [newUser, setNewUser] = useState({
+        name: '',
+        email: '',
+        password: '',
+        role: 'admin'
+    });
 
-  const handleDelete = (id: string) => {
-    setAdmins(admins.filter(a => a.id !== id));
-  };
+    const handleAddUser = async () => {
+        if (!newUser.name || !newUser.email || !newUser.password) {
+            toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
+            return;
+        }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Manage Admins</h1>
-        <p className="text-muted-foreground">Add, remove, or edit administrative users for the admin portal.</p>
-      </div>
+        await addUser(newUser);
+        setNewUser({ name: '', email: '', password: '', role: 'admin' });
+        toast({ title: '✨ Success', description: 'New admin user added successfully' });
+    };
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Admin</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="admin-username">Username</Label>
-              <Input id="admin-username" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+    const handleDeleteUser = (id: string) => {
+        if (confirm('Are you sure you want to delete this user?')) {
+            deleteUser(id);
+            toast({ title: '✨ Success', description: 'User deleted successfully' });
+        }
+    };
+
+    return (
+        <div className="space-y-8 pb-8">
+            {/* Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 p-8 border border-border/50">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+                <div className="relative">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-3 bg-primary/10 rounded-xl">
+                            <Shield className="h-6 w-6 text-primary" />
+                        </div>
+                        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                            Admin Management
+                        </h1>
+                    </div>
+                    <p className="text-muted-foreground text-lg ml-[60px]">Manage system administrators and access</p>
+                </div>
             </div>
-            <div>
-              <Label htmlFor="admin-email">Email</Label>
-              <Input id="admin-email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div>
-              <Label htmlFor="admin-password">Password</Label>
-              <Input id="admin-password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-            </div>
-          </div>
-          <div className="flex justify-end mt-4">
-            <Button onClick={handleAdd}>Add Admin</Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-4">
-        {admins.map((admin) => (
-          <Card key={admin.id}>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <div className="font-medium">{admin.username}</div>
-                <div className="text-sm text-muted-foreground">{admin.email}</div>
-              </div>
-              <div>
-                <Button variant="destructive" size="sm" onClick={() => handleDelete(admin.id)}>Remove</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
+            <Tabs defaultValue="list" className="w-full space-y-6">
+                <TabsList className="grid w-full grid-cols-2 h-14 p-1 bg-muted/50 rounded-xl">
+                    <TabsTrigger value="list" className="h-12 rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm text-base font-medium transition-all">
+                        <Users className="h-4 w-4 mr-2" />
+                        Admins List
+                    </TabsTrigger>
+                    <TabsTrigger value="add" className="h-12 rounded-lg data-[state=active]:bg-background data-[state=active]:text-accent data-[state=active]:shadow-sm text-base font-medium transition-all">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add New Admin
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="list" className="mt-0">
+                    <Card className="border-border/50 shadow-lg">
+                        <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
+                            <CardTitle className="text-2xl">Current Administrators</CardTitle>
+                            <CardDescription className="text-base">List of users with admin access</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                            <div className="rounded-md border border-border/50 overflow-hidden">
+                                <Table>
+                                    <TableHeader className="bg-muted/30">
+                                        <TableRow>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Role</TableHead>
+                                            <TableHead>Joined Date</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {users.map((user) => (
+                                            <TableRow key={user.id} className="hover:bg-muted/20">
+                                                <TableCell className="font-medium flex items-center gap-2">
+                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        {user.name.charAt(0)}
+                                                    </div>
+                                                    {user.name}
+                                                </TableCell>
+                                                <TableCell>{user.email}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary">
+                                                        {user.role}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="add" className="mt-0">
+                    <Card className="border-border/50 shadow-lg max-w-2xl mx-auto">
+                        <CardHeader className="bg-gradient-to-br from-muted/30 to-background border-b border-border/50">
+                            <CardTitle className="text-2xl">Create New Admin</CardTitle>
+                            <CardDescription className="text-base">Grant admin access to a new user</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6 pt-6">
+                            <div className="space-y-3">
+                                <Label htmlFor="name" className="text-base font-semibold flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-muted-foreground" /> Full Name
+                                </Label>
+                                <Input
+                                    id="name"
+                                    value={newUser.name}
+                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                                    placeholder="John Doe"
+                                    className="h-12 text-base border-border/50 focus:border-primary/50"
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <Label htmlFor="email" className="text-base font-semibold flex items-center gap-2">
+                                    <Mail className="h-4 w-4 text-muted-foreground" /> Email Address
+                                </Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={newUser.email}
+                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                    placeholder="john@example.com"
+                                    className="h-12 text-base border-border/50 focus:border-primary/50"
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <Label htmlFor="password" className="text-base font-semibold flex items-center gap-2">
+                                    <Lock className="h-4 w-4 text-muted-foreground" /> Password
+                                </Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={newUser.password}
+                                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                    placeholder="••••••••"
+                                    className="h-12 text-base border-border/50 focus:border-primary/50"
+                                />
+                            </div>
+
+                            <Button onClick={handleAddUser} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
+                                <UserPlus className="h-5 w-5 mr-2" />
+                                Create Admin User
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
 };
 
 export default ManageAdmins;

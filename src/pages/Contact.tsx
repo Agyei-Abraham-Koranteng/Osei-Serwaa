@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Phone, Mail, Clock, ChefHat } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRestaurant } from '@/context/RestaurantContext';
 import heroRestaurant from '@/assets/hero-restaurant.jpg';
@@ -19,9 +19,22 @@ const Contact = () => {
   });
 
   const { addContactMessage, heroImages, contactPageInfo, heroTexts } = useRestaurant();
-  const hero = heroImages.contact || heroRestaurant;
+  const rawImages = heroImages?.contact || [];
+  const validImages = rawImages.filter(url => url && url.trim() !== '');
+  const heroImagesArray = validImages.length > 0 ? validImages : [heroRestaurant];
+
   const heroTitle = heroTexts?.contact?.title || contactPageInfo?.pageContent?.heroTitle || 'Contact';
   const heroSubtitle = heroTexts?.contact?.subtitle || contactPageInfo?.pageContent?.heroSubtitle || "Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.";
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (heroImagesArray.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImagesArray.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroImagesArray.length]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +50,18 @@ const Contact = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 scale-105 blur-[0.5px]">
-          <img src={hero} alt="Contact hero" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0">
+          {heroImagesArray.map((image, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <div className="absolute inset-0 scale-105 blur-[0.5px]">
+                <img src={image} alt={`Contact hero ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/60" />
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="relative z-10 container mx-auto px-4 text-center py-20">

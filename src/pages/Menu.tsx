@@ -12,7 +12,7 @@ const Menu = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredItems = menuItems.filter((item) => {
-    const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;

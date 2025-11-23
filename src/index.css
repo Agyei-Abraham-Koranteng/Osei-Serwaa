@@ -2,100 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Restaurant warm color palette */
-    --background: 40 20% 97%;
-    --foreground: 25 30% 15%;
+    /* Modern, Rich Color Palette */
+
+    /* Backgrounds: Warm, clean off-whites */
+    --background: 30 20% 98%;
+    --foreground: 24 10% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 25 30% 15%;
+    --card-foreground: 24 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 25 30% 15%;
+    --popover-foreground: 24 10% 10%;
 
-    /* Vibrant tomato gradient as primary - appetizing and bold */
-    --primary: 8 92% 58%;
+    /* Primary: Terracotta / Burnt Orange - Rich and appetizing */
+    --primary: 12 85% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 8 92% 50%;
-    --primary-glow: 12 95% 65%;
+    --primary-hover: 12 85% 48%;
+    --primary-glow: 12 90% 65%;
 
-    /* Deep brown for secondary - elegant and grounded */
-    --secondary: 25 40% 35%;
-    --secondary-foreground: 40 20% 95%;
+    /* Secondary: Deep Charcoal / Warm Black - Elegant contrast */
+    --secondary: 24 20% 20%;
+    --secondary-foreground: 30 20% 98%;
 
-    /* Soft cream/beige for muted elements */
-    --muted: 40 25% 92%;
-    --muted-foreground: 25 20% 45%;
+    /* Accents: Gold/Ochre for premium touches */
+    --accent: 35 85% 55%;
+    --accent-foreground: 24 20% 20%;
 
-    /* Dark footer color */
-    --footer-dark: 220 39% 11%;
-
-    /* Gold accent for premium feel */
-    --accent: 45 90% 60%;
-    --accent-foreground: 25 30% 15%;
+    --muted: 30 20% 94%;
+    --muted-foreground: 24 10% 45%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 8 92% 58%;
+    --border: 30 20% 90%;
+    --input: 30 20% 90%;
+    --ring: 12 85% 55%;
 
     --radius: 0.75rem;
 
-    /* Enhanced tomato gradients for modern feel */
-    --gradient-primary: linear-gradient(135deg, hsl(8 92% 58%) 0%, hsl(12 88% 54%) 100%);
-    --gradient-dark: linear-gradient(135deg, hsl(25 40% 25%) 0%, hsl(25 40% 35%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(40 25% 96%) 0%, hsl(40 20% 97%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(8 92% 58%) 0%, hsl(15 90% 60%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(25 40% 25%) 0%, hsl(8 92% 58% / 0.1) 100%);
-    
-    /* Enhanced shadows with tomato glow */
-    --shadow-elegant: 0 20px 50px -10px hsl(8 92% 58% / 0.25);
-    --shadow-soft: 0 4px 20px -4px hsl(25 30% 15% / 0.08);
-    --shadow-glow: 0 0 40px hsl(8 92% 58% / 0.3);
-    --shadow-card: 0 8px 30px -8px hsl(25 30% 15% / 0.12);
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(12 85% 58%) 0%, hsl(16 80% 50%) 100%);
+    --gradient-dark: linear-gradient(135deg, hsl(24 20% 20%) 0%, hsl(24 25% 15%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(30 20% 98%) 0%, hsl(30 20% 95%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(12 85% 55%) 0%, hsl(35 85% 55%) 100%);
+    --gradient-hero: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7));
 
-    /* Smooth transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Shadows */
+    --shadow-elegant: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+    --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    --shadow-glow: 0 0 20px hsl(12 85% 55% / 0.3);
+
+    /* Footer specific - always dark */
+    --footer-bg: 24 20% 20%;
+    --footer-fg: 30 20% 98%;
   }
 
   .dark {
-    --background: 25 30% 12%;
-    --foreground: 40 20% 95%;
+    /* Dark Mode: Deep, rich charcoal tones */
+    --background: 24 20% 10%;
+    --foreground: 30 20% 95%;
 
-    --card: 25 35% 15%;
-    --card-foreground: 40 20% 95%;
+    --card: 24 20% 14%;
+    --card-foreground: 30 20% 95%;
 
-    --popover: 25 35% 15%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 24 20% 14%;
+    --popover-foreground: 30 20% 95%;
 
-    --primary: 8 92% 58%;
+    --primary: 12 85% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 8 92% 50%;
-    --primary-glow: 12 95% 65%;
+    --primary-hover: 12 85% 50%;
+    --primary-glow: 12 90% 65%;
 
-    --secondary: 25 30% 25%;
-    --secondary-foreground: 40 20% 95%;
+    --secondary: 30 20% 95%;
+    --secondary-foreground: 24 20% 10%;
 
-    --muted: 25 25% 20%;
-    --muted-foreground: 40 15% 60%;
+    --muted: 24 20% 18%;
+    --muted-foreground: 30 10% 60%;
 
-    --accent: 45 90% 60%;
-    --accent-foreground: 25 30% 12%;
+    --accent: 35 85% 55%;
+    --accent-foreground: 24 20% 10%;
 
     --destructive: 0 70% 50%;
-    --destructive-foreground: 40 20% 95%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 25 25% 25%;
-    --input: 25 25% 25%;
-    --ring: 8 92% 58%;
+    --border: 24 20% 20%;
+    --input: 24 20% 20%;
+    --ring: 12 85% 60%;
+
+    --gradient-subtle: linear-gradient(180deg, hsl(24 20% 12%) 0%, hsl(24 20% 10%) 100%);
+
+    /* Footer specific - always dark */
+    --footer-bg: 24 20% 10%;
+    --footer-fg: 30 20% 95%;
   }
 }
 
@@ -105,85 +105,95 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary;
+    /* Subtle noise texture for depth */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
-  }
-
-  /* Smooth scroll behavior */
-  html {
-    scroll-behavior: smooth;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-bold tracking-tight;
   }
 }
 
 @layer utilities {
-  /* Hover scale animation */
-  .hover-scale {
-    @apply transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98];
+  .glass {
+    @apply bg-white/70 dark:bg-black/70 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-lg;
   }
 
-  /* Fade in animation */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
+  .text-balance {
+    text-wrap: balance;
   }
 
-  @keyframes fadeIn {
+  /* Animations */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  @keyframes fadeInUp {
     from {
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
-  /* Slide up animation */
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out forwards;
-  }
-
-  @keyframes slideUp {
+  @keyframes scaleIn {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: scale(0.95);
     }
+
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: scale(1);
     }
   }
 
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent;
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
-  /* Glass morphism */
-  .glass {
-    @apply bg-background/80 backdrop-blur-md border border-border/50;
-  }
-
-  /* Shine effect */
-  .shine {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .shine::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-  }
-
-  .shine:hover::before {
-    left: 100%;
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
   }
 }

@@ -10,7 +10,8 @@ const MainLayout = () => {
   useEffect(() => {
     // increment simple client-side visitor counter on each page load
     incrementSiteVisitors();
-  }, [incrementSiteVisitors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

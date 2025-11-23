@@ -4,23 +4,50 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Star, Clock, Award, Heart, ChefHat } from 'lucide-react';
 import { useRestaurant } from '@/context/RestaurantContext';
 import MenuCard from '@/components/MenuCard';
-import heroImage from '@/assets/hero-restaurant.jpg';
+import { useState, useEffect } from 'react';
 
 const Home = () => {
-  const { menuItems, heroImages, homeContent, heroTexts } = useRestaurant();
+  const { menuItems, homeContent, heroTexts, heroImages } = useRestaurant();
   const featuredItems = menuItems.filter((item) => item.featured).slice(0, 3);
-  const hero = heroImages.home || heroImage;
   const heroTitle = heroTexts?.home?.title || homeContent?.hero?.title;
   const heroSubtitle = heroTexts?.home?.subtitle || homeContent?.hero?.subtitle;
   const heroTagline = heroTexts?.home?.tagline || homeContent?.hero?.tagline;
 
+  // Hero slider state using images from context
+  const heroImagesArray = (heroImages?.home || []).filter(url => url && url.trim() !== '');
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Auto-advance slider
+  useEffect(() => {
+    if (heroImagesArray.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImagesArray.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [heroImagesArray.length]);
+
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section with Slider */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 scale-105 blur-[0.5px]">
-          <img src={hero} alt="Home hero" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/60" />
+        {/* Image Slider */}
+        <div className="absolute inset-0">
+          {heroImagesArray.length > 0 ? (
+            heroImagesArray.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <div className="absolute inset-0 scale-105 blur-[0.5px]">
+                  <img src={image} alt={`Hero ${index + 1}`} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/60" />
+                </div>
+              </div>
+            ))
+          ) : (
+            // Fallback if no images
+            <div className="absolute inset-0 bg-black/80" />
+          )}
         </div>
 
         <div className="relative z-10 container mx-auto px-4 text-center py-20">
@@ -46,7 +73,11 @@ const Home = () => {
                 </Button>
               </Link>
               <Link to="/reservations">
-                <Button size="lg" variant="outline" className="text-lg px-10 text-white border-2 border-white rounded-full hover:bg-white/10 hover:border-white backdrop-blur-sm bg-white/5">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-10 text-white border-2 border-white rounded-full hover:bg-white/10 hover:border-white backdrop-blur-sm bg-white/5"
+                >
                   Make a Reservation
                 </Button>
               </Link>
@@ -96,7 +127,7 @@ const Home = () => {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center space-y-5 mb-16">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">

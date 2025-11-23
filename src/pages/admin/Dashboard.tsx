@@ -1,187 +1,173 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRestaurant } from '@/context/RestaurantContext';
-import { Calendar, UtensilsCrossed, MessageSquare, Users, Home, Image, Phone, Eye, RotateCw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Calendar, Mail, Utensils, Users, ArrowRight, Clock, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { reservations, menuItems, contactMessages, siteVisitors, resetSiteVisitors } = useRestaurant();
+    const { reservations, contactMessages, menuItems, siteVisitors } = useRestaurant();
 
-  const stats = [
-    {
-      title: 'Site Visitors',
-      value: siteVisitors,
-      icon: Eye,
-      color: 'text-sky-600',
-      bgColor: 'bg-sky-50',
-    },
-    {
-      title: 'Reservations',
-      value: reservations.length,
-      icon: Calendar,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Menu Items',
-      value: menuItems.length,
-      icon: UtensilsCrossed,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'Confirmed Bookings',
-      value: reservations.filter(r => r.status === 'confirmed').length,
-      icon: Users,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-    },
-  ];
+    const pendingReservations = reservations.filter(r => r.status === 'pending').length;
+    const unreadMessages = contactMessages.filter(m => m.status === 'unread').length;
+    const totalMenuItems = menuItems.length;
 
-  const quickLinks = [
-    { path: '/admin/menu', label: 'Menu Management', icon: UtensilsCrossed, color: 'text-purple-600' },
-    { path: '/admin/reservations', label: 'Reservations', icon: Calendar, color: 'text-green-600' },
-    { path: '/admin/contact-messages', label: 'Messages', icon: MessageSquare, color: 'text-blue-600' },
-    { path: '/admin/home', label: 'Home Content', icon: Home, color: 'text-orange-600' },
-    { path: '/admin/gallery', label: 'Gallery', icon: Image, color: 'text-pink-600' },
-    { path: '/admin/contact', label: 'Contact Info', icon: Phone, color: 'text-teal-600' },
-  ];
+    const recentReservations = [...reservations]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5);
 
-  const upcomingReservations = reservations
-    .filter((r) => r.status !== 'cancelled')
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5);
+    const recentMessages = [...contactMessages]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
 
-  const recentMessages = contactMessages
-    .filter(m => m.status === 'unread')
-    .slice(0, 5);
+    return (
+        <div className="space-y-8 pb-8">
+            {/* Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 p-8 border border-border/50">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+                <div className="relative">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+                        Dashboard
+                    </h1>
+                    <p className="text-muted-foreground text-lg">Welcome back! Here's what's happening today.</p>
+                </div>
+            </div>
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome to your restaurant admin panel</p>
-      </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="border-border/50 shadow-md hover:shadow-lg transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reservations</CardTitle>
+                        <Calendar className="h-4 w-4 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{pendingReservations}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {reservations.length} total bookings
+                        </p>
+                    </CardContent>
+                </Card>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                        <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                        {stat.title === 'Site Visitors' && (
-                          <div className="mt-3">
-                            <Button size="sm" variant="ghost" onClick={resetSiteVisitors} className="px-2">
-                              <RotateCw className="h-4 w-4" />
+                <Card className="border-border/50 shadow-md hover:shadow-lg transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Unread Messages</CardTitle>
+                        <Mail className="h-4 w-4 text-accent" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{unreadMessages}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {contactMessages.length} total messages
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-border/50 shadow-md hover:shadow-lg transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Menu Items</CardTitle>
+                        <Utensils className="h-4 w-4 text-secondary" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{totalMenuItems}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Active dishes
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-border/50 shadow-md hover:shadow-lg transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Site Visitors</CardTitle>
+                        <Users className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{siteVisitors}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Total visits
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Recent Reservations */}
+                <Card className="border-border/50 shadow-lg">
+                    <CardHeader className="border-b border-border/50 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-xl flex items-center gap-2">
+                                <Clock className="h-5 w-5 text-primary" /> Recent Reservations
+                            </CardTitle>
+                            <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80">
+                                <Link to="/admin/reservations">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
                             </Button>
-                          </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        {recentReservations.length > 0 ? (
+                            <div className="space-y-4">
+                                {recentReservations.map((res) => (
+                                    <div key={res.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/50 hover:bg-muted/40 transition-colors">
+                                        <div>
+                                            <p className="font-medium">{res.name}</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {new Date(res.date).toLocaleDateString()} at {res.time} • {res.guests} guests
+                                            </p>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${res.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                            res.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`}>
+                                            {res.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-center text-muted-foreground py-8">No recent reservations</p>
                         )}
-                      </div>
-                      <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                        <Icon className={`h-6 w-6 ${stat.color}`} />
-                      </div>
-                    </div>
-                  </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    </CardContent>
+                </Card>
 
-      {/* Quick Links */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Links</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {quickLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link key={link.path} to={link.path}>
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-auto flex flex-col items-center gap-3 py-6 hover:border-primary/50 hover:shadow-sm transition-all"
-                  >
-                    <Icon className={`h-8 w-8 ${link.color}`} />
-                    <span className="text-sm font-medium text-center">{link.label}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                {/* Recent Messages */}
+                <Card className="border-border/50 shadow-lg">
+                    <CardHeader className="border-b border-border/50 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-xl flex items-center gap-2">
+                                <Mail className="h-5 w-5 text-accent" /> Recent Messages
+                            </CardTitle>
+                            <Button variant="ghost" size="sm" asChild className="text-accent hover:text-accent/80">
+                                <Link to="/admin/contact">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        {recentMessages.length > 0 ? (
+                            <div className="space-y-4">
+                                {recentMessages.map((msg) => (
+                                    <div key={msg.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/50 hover:bg-muted/40 transition-colors">
+                                        <div className="overflow-hidden">
+                                            <p className="font-medium truncate">{msg.subject}</p>
+                                            <p className="text-sm text-muted-foreground truncate">
+                                                From: {msg.name} • {new Date(msg.createdAt).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ml-2 ${msg.status === 'unread' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-gray-100 text-gray-800'
+                                            }`}>
+                                            {msg.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-center text-muted-foreground py-8">No recent messages</p>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Messages */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Messages</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentMessages.length > 0 ? (
-              <div className="space-y-4">
-                {recentMessages.map((message) => (
-                  <div key={message.id} className="p-3 border border-border rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="font-medium">{message.name}</p>
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                        {message.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-1">{message.subject}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{message.message}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No new messages</p>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Upcoming Reservations */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Reservations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingReservations.length > 0 ? (
-              <div className="space-y-4">
-                {upcomingReservations.map((reservation) => (
-                  <div key={reservation.id} className="flex justify-between items-center p-3 border border-border rounded-lg">
-                    <div>
-                      <p className="font-medium">{reservation.name}</p>
-                      <p className="text-sm text-muted-foreground">{reservation.date} at {reservation.time}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{reservation.guests} guests</p>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          reservation.status === 'confirmed'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-orange-100 text-orange-700'
-                        }`}
-                      >
-                        {reservation.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No upcoming reservations</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+
+        </div >
+    );
 };
 
 export default Dashboard;
