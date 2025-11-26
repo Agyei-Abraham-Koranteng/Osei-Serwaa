@@ -134,6 +134,15 @@ create table public.contact_info (
   constraint single_row check (id = 1)
 );
 
+-- Profiles Table (for Admin Users)
+create table if not exists public.profiles (
+  id uuid references auth.users on delete cascade not null primary key,
+  username text unique not null,
+  email text unique not null,
+  role text default 'admin',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Row Level Security (RLS) Policies
 
 -- Enable RLS
@@ -144,18 +153,6 @@ alter table public.messages enable row level security;
 alter table public.site_content enable row level security;
 alter table public.gallery_images enable row level security;
 alter table public.page_content enable row level security;
-alter table public.home_features enable row level security;
-alter table public.home_cta enable row level security;
-alter table public.about_story enable row level security;
-alter table public.about_values enable row level security;
-alter table public.team_members enable row level security;
-alter table public.contact_info enable row level security;
-alter table public.footer_info enable row level security;
-
--- Policies for Categories (Public Read, Admin Write)
-create policy "Public categories are viewable by everyone" on public.categories for select using (true);
-create policy "Admins can insert categories" on public.categories for insert with check (auth.role() = 'authenticated');
-create policy "Admins can update categories" on public.categories for update using (auth.role() = 'authenticated');
 create policy "Admins can delete categories" on public.categories for delete using (auth.role() = 'authenticated');
 
 -- Policies for Menu Items (Public Read, Admin Write)

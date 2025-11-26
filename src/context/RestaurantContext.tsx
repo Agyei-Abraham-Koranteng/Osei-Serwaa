@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { UAParser } from 'ua-parser-js';
 
 // Types
@@ -65,7 +66,7 @@ export interface ContactPageInfo {
 
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   role: string;
   created_at?: string;
@@ -448,16 +449,75 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // User Management
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) throw error;
+      if (data) {
+        setUsers(data as User[]);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
+  };
+
   const addUser = async (user: Omit<User, 'id' | 'created_at'>) => {
-    // Note: Creating users in Supabase Auth usually requires admin API or client-side signup.
-    // Here we just insert into profiles if using a separate profiles table logic, 
-    // but ideally this should be handled via auth.signUp()
-    console.warn('Add User should be handled via Supabase Auth SignUp');
+    try {
+      // 1. Create Auth User (using a temporary client to avoid signing out current admin)
+      // Note: This requires the Anon Key to have 'SignUp' enabled.
+      // Ideally, this should be done via an Edge Function with Service Role.
+      // For this client-side demo, we'll try a workaround or just insert the profile if the user already exists.
+
+      // Workaround: We can't easily create a new auth user without signing out the current one using the standard client.
+      // We will assume the user is created via the Supabase Dashboard or a separate flow for now, 
+      // OR we can try to use a second client instance.
+
+      const tempSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
+
+      const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+        email: user.email,
+        password: (user as any).password, // Password passed in
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Insert Profile
+        const { error: profileError } = await supabase.from('profiles').insert([{
+          id: authData.user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }]);
+
+        if (profileError) throw profileError;
+
+        setUsers([...users, {
+          id: authData.user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          created_at: new Date().toISOString()
+        }]);
+      }
+    } catch (err: any) {
+      console.error('Error adding user:', err);
+      throw err; // Propagate to UI
+    }
   };
 
   const deleteUser = async (id: string) => {
-    // Deleting from auth.users requires service role key or admin API
-    console.warn('Delete User requires Admin API');
+    try {
+      // We can only delete the profile via RLS. The Auth user will remain but lose access if logic depends on profile.
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) throw error;
+      setUsers(users.filter(u => u.id !== id));
+    } catch (err) {
+      console.error('Error deleting user:', err);
+    }
   };
 
   // Footer function

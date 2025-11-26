@@ -15,20 +15,20 @@ const ManageAdmins = () => {
     const { toast } = useToast();
 
     const [newUser, setNewUser] = useState({
-        name: '',
+        username: '',
         email: '',
         password: '',
         role: 'admin'
     });
 
     const handleAddUser = async () => {
-        if (!newUser.name || !newUser.email || !newUser.password) {
+        if (!newUser.username || !newUser.email || !newUser.password) {
             toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
             return;
         }
 
-        await addUser(newUser);
-        setNewUser({ name: '', email: '', password: '', role: 'admin' });
+        await addUser(newUser as any);
+        setNewUser({ username: '', email: '', password: '', role: 'admin' });
         toast({ title: '✨ Success', description: 'New admin user added successfully' });
     };
 
@@ -80,7 +80,7 @@ const ManageAdmins = () => {
                                 <Table>
                                     <TableHeader className="bg-muted/30">
                                         <TableRow>
-                                            <TableHead>Name</TableHead>
+                                            <TableHead>Username</TableHead>
                                             <TableHead>Email</TableHead>
                                             <TableHead>Role</TableHead>
                                             <TableHead>Joined Date</TableHead>
@@ -92,9 +92,9 @@ const ManageAdmins = () => {
                                             <TableRow key={user.id} className="hover:bg-muted/20">
                                                 <TableCell className="font-medium flex items-center gap-2">
                                                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                        {user.name.charAt(0)}
+                                                        {user.username?.charAt(0).toUpperCase()}
                                                     </div>
-                                                    {user.name}
+                                                    {user.username}
                                                 </TableCell>
                                                 <TableCell>{user.email}</TableCell>
                                                 <TableCell>
@@ -130,14 +130,14 @@ const ManageAdmins = () => {
                         </CardHeader>
                         <CardContent className="space-y-6 pt-6">
                             <div className="space-y-3">
-                                <Label htmlFor="name" className="text-base font-semibold flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-muted-foreground" /> Full Name
+                                <Label htmlFor="username" className="text-base font-semibold flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-muted-foreground" /> Username
                                 </Label>
                                 <Input
-                                    id="name"
-                                    value={newUser.name}
-                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                                    placeholder="John Doe"
+                                    id="username"
+                                    value={newUser.username}
+                                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                                    placeholder="johndoe"
                                     className="h-12 text-base border-border/50 focus:border-primary/50"
                                 />
                             </div>
