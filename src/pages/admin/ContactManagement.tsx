@@ -31,7 +31,8 @@ const ContactManagement = () => {
         address: '',
         phone: '',
         email: '',
-        hours: { weekday: '', weekend: '' }
+        hours: { weekday: '', weekend: '' },
+        mapUrl: ''
     });
 
     // Message Dialog
@@ -337,13 +338,60 @@ const ContactManagement = () => {
                                 </div>
                             </div>
 
+                            <div className="space-y-3">
+                                <Label htmlFor="map-url" className="text-base font-semibold flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" /> Google Maps Embed URL
+                                </Label>
+                                <Input
+                                    id="map-url"
+                                    value={contactInfo.mapUrl || ''}
+                                    onChange={(e) => {
+                                        let val = e.target.value;
+
+                                        // Try to extract src if user pastes full iframe code
+                                        if (val.includes('<iframe') && val.includes('src="')) {
+                                            const match = val.match(/src="([^"]+)"/);
+                                            if (match && match[1]) {
+                                                val = match[1];
+                                                toast({ title: "URL Extracted", description: "Extracted the embed URL from the iframe code." });
+                                            }
+                                        }
+
+                                        // Always decode HTML entities
+                                        try {
+                                            const txt = document.createElement('textarea');
+                                            txt.innerHTML = val;
+                                            val = txt.value;
+                                        } catch (err) {
+                                            console.error('Failed to decode URL:', err);
+                                        }
+
+                                        setContactInfo({ ...contactInfo, mapUrl: val.trim() });
+                                    }}
+                                    placeholder="https://www.google.com/maps/embed?..."
+                                    className="h-12 text-base border-border/50 focus:border-primary/50"
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                    Paste the full <code>&lt;iframe&gt;</code> code from Google Maps, or just the URL from the <code>src</code> attribute.
+                                </p>
+                                {contactInfo.mapUrl && !contactInfo.mapUrl.includes('/embed') && (
+                                    <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-600 text-sm flex items-start gap-2">
+                                        <span className="text-lg">⚠️</span>
+                                        <p>
+                                            This doesn't look like a valid embed URL. It should usually contain <code>/embed</code>.
+                                            Regular Google Maps links will not work. Please use the <strong>Share {'>'} Embed a map</strong> option in Google Maps.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
                             <Button onClick={handleSaveContactInfo} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
                                 <Save className="h-5 w-5 mr-2" />
                                 Save Contact Information
                             </Button>
                         </CardContent>
                     </Card>
-                </TabsContent>
+                </TabsContent >
 
                 <TabsContent value="messages" className="mt-0">
                     <Card className="border-border/50 shadow-lg">
@@ -428,10 +476,10 @@ const ContactManagement = () => {
                         </CardContent>
                     </Card>
                 </TabsContent>
-            </Tabs>
+            </Tabs >
 
             {/* Message View Dialog */}
-            <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+            < Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen} >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl">Message Details</DialogTitle>
@@ -466,9 +514,9 @@ const ContactManagement = () => {
                         </div>
                     )}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
             {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            < Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Confirm Delete</DialogTitle>
@@ -479,8 +527,8 @@ const ContactManagement = () => {
                         <Button variant="destructive" onClick={confirmDelete}>Delete</Button>
                     </div>
                 </DialogContent>
-            </Dialog>
-        </div>
+            </Dialog >
+        </div >
     );
 };
 

@@ -29,6 +29,7 @@ const AdminLayout = () => {
     { path: '/admin/gallery', label: 'Gallery', icon: Image },
     { path: '/admin/contact', label: 'Contact', icon: Phone },
     { path: '/admin/footer', label: 'Footer', icon: MessageSquare },
+    { path: '/admin/visitors', label: 'Site Visitors', icon: Users },
     { path: '/admin/manage-admins', label: 'Manage Admins', icon: Users },
   ];
 

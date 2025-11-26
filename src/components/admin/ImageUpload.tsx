@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3001';
+import { supabase } from '@/lib/supabase';
 
 interface ImageUploadProps {
     label?: string;
@@ -58,46 +57,42 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
         };
         reader.readAsDataURL(file);
 
-        // Upload to server
+        // Upload to Supabase Storage
         setUploading(true);
         try {
-            const formData = new FormData();
-            formData.append('image', file);
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
 
-            const token = localStorage.getItem('auth_token');
-            const response = await fetch(`${API_URL}/api/upload/image`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: formData,
-            });
+            const { error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, file);
 
-            if (!response.ok) {
-                throw new Error('Upload failed');
+            if (uploadError) {
+                throw uploadError;
             }
 
-            const data = await response.json();
+            const { data: { publicUrl } } = supabase.storage
+                .from('images')
+                .getPublicUrl(filePath);
 
-            // Fetch the actual data URL
-            const imageResponse = await fetch(`${API_URL}${data.url}`);
-            const imageData = await imageResponse.json();
-
-            onChange(imageData.dataUrl);
+            onChange(publicUrl);
             if (onImageIdChange) {
-                onImageIdChange(data.id);
+                // Supabase Storage doesn't use numeric IDs like the local DB, passing null or handling differently
+                // If the parent component expects a numeric ID, we might need to adjust that expectation
+                onImageIdChange(null);
             }
-            setPreview(imageData.dataUrl);
+            setPreview(publicUrl);
 
             toast({
                 title: 'Success',
                 description: 'Image uploaded successfully',
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Upload error:', error);
             toast({
                 title: 'Upload failed',
-                description: 'Failed to upload image. Please try again.',
+                description: error.message || 'Failed to upload image. Please try again.',
                 variant: 'destructive',
             });
             setPreview('');

@@ -216,12 +216,27 @@ const Contact = () => {
         <div className="mt-16">
           <Card className="shadow-card border-border/50">
             <CardContent className="p-0">
-              <div className="h-96 bg-gradient-to-br from-primary/5 via-accent/5 to-muted rounded-xl flex items-center justify-center">
-                <div className="text-center space-y-3">
-                  <div className="text-6xl opacity-20">📍</div>
-                  <p className="text-lg text-muted-foreground font-medium">123 Liberation Road, Accra, Ghana</p>
+              {contactPageInfo?.contactInfo?.mapUrl && contactPageInfo.contactInfo.mapUrl.startsWith('https://www.google.com/maps/embed') ? (
+                <iframe
+                  key={contactPageInfo.contactInfo.mapUrl}
+                  src={contactPageInfo.contactInfo.mapUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, minHeight: '400px' }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="rounded-xl"
+                  title="Restaurant Location"
+                ></iframe>
+              ) : (
+                <div className="h-96 bg-gradient-to-br from-primary/5 via-accent/5 to-muted rounded-xl flex items-center justify-center">
+                  <div className="text-center space-y-3">
+                    <div className="text-6xl opacity-20">📍</div>
+                    <p className="text-lg text-muted-foreground font-medium">123 Liberation Road, Accra, Ghana</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>

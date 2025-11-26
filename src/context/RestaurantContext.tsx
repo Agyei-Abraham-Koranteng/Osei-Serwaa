@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3001';
+import { supabase } from '@/lib/supabase';
+import { UAParser } from 'ua-parser-js';
 
 // Types
 export interface MenuItem {
@@ -60,7 +60,7 @@ export interface GalleryImage {
 
 export interface ContactPageInfo {
   pageContent: { heroTitle: string; heroSubtitle: string };
-  contactInfo: { address: string; phone: string; email: string; hours: { weekday: string; weekend: string } };
+  contactInfo: { address: string; phone: string; email: string; hours: { weekday: string; weekend: string }; mapUrl?: string };
 }
 
 export interface User {
@@ -74,7 +74,7 @@ export interface User {
 export interface FooterContent {
   copyrightText: string;
   description: string;
-  socialLinks: { facebook: string; instagram: string; twitter: string };
+  socialLinks: { tiktok: string };
 }
 
 export interface ContactMessage {
@@ -161,12 +161,7 @@ export const useRestaurant = () => {
 export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   // Core state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [categories] = useState<Category[]>([
-    { id: 'starters', name: 'Starters', description: 'Light bites to start your meal' },
-    { id: 'mains', name: 'Main Courses', description: 'Hearty traditional dishes' },
-    { id: 'sides', name: 'Sides', description: 'Perfect accompaniments' },
-    { id: 'drinks', name: 'Drinks', description: 'Refreshing beverages' },
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -175,7 +170,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   const [footerContent, setFooterContentState] = useState<FooterContent>({
     copyrightText: '© 2024 Osei Serwaa Kitchen. All rights reserved.',
     description: 'Authentic Ghanaian cuisine in a modern, elegant setting.',
-    socialLinks: { facebook: '', instagram: '', twitter: '' },
+    socialLinks: { tiktok: '' },
   });
 
   const [heroImages, setHeroImagesState] = useState<Record<string, string[]>>({});
@@ -202,114 +197,115 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
 
   const [siteVisitors, setSiteVisitors] = useState<number>(0);
 
-  // Helper to persist generic content
-  const saveContent = async (key: string, value: any) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_URL}/api/content/${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(value),
-      });
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Server responded with ${res.status}: ${errorText}`);
-      }
-    } catch (err) {
-      console.error(`Error saving content for ${key}:`, err);
-      throw err; // Re-throw to let caller handle it
-    }
-  };
-
   // Initial data fetch
   useEffect(() => {
-    // Fetch menu items
-    fetch(`${API_URL}/api/menu`)
-      .then(r => r.json())
-      .then(data => setMenuItems(data))
-      .catch(err => console.error('Error fetching menu:', err));
+    const fetchData = async () => {
+      // Fetch categories
+      const { data: catData } = await supabase.from('categories').select('*').order('display_order');
+      if (catData) setCategories(catData);
 
-    // Fetch visitor count
-    fetch(`${API_URL}/api/visitors`)
-      .then(r => r.json())
-      .then(data => setSiteVisitors(data.count))
-      .catch(err => console.error('Error fetching visitors:', err));
+      // Fetch menu items
+      const { data: menuData } = await supabase.from('menu_items').select('*');
+      if (menuData) {
+        setMenuItems(menuData.map(item => ({
+          ...item,
+          image: item.image_url,
+          categoryId: item.category,
+          featured: item.featured,
+          available: item.available
+        })));
+      }
 
-    // Fetch contact messages and reservations (admin only)
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // Fetch contact messages
-      fetch(`${API_URL}/api/messages`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => setContactMessages(data))
-        .catch(err => console.error('Error fetching messages:', err));
+      // Fetch visitor count
+      const { data: visitorData } = await supabase.from('site_content').select('value').eq('key', 'site_visitors').single();
+      if (visitorData?.value) {
+        // value is already an object (jsonb)
+        setSiteVisitors(visitorData.value.count || 0);
+      }
 
-      // Fetch reservations
-      fetch(`${API_URL}/api/reservations`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(data => setReservations(data))
-        .catch(err => console.error('Error fetching reservations:', err));
-
-      // Fetch users
-      fetch(`${API_URL}/api/users`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-        .then(r => {
-          if (!r.ok) throw new Error('Failed to fetch users');
-          return r.json();
-        })
-        .then(data => {
-          if (Array.isArray(data)) {
-            setUsers(data);
-          } else {
-            console.error('Expected array of users, got:', data);
-            setUsers([]);
-          }
-        })
-        .catch(err => {
-          console.error('Error fetching users:', err);
-          setUsers([]);
+      // Fetch Page Content (Heroes)
+      const { data: pageData } = await supabase.from('page_content').select('*');
+      if (pageData) {
+        const newHeroTexts: Record<string, any> = {};
+        const newHeroImages: Record<string, any> = {};
+        pageData.forEach(p => {
+          newHeroTexts[p.page_slug] = { title: p.hero_title, subtitle: p.hero_subtitle, tagline: p.hero_tagline };
+          newHeroImages[p.page_slug] = p.hero_images || [];
         });
-    }
+        setHeroTextsState(newHeroTexts);
+        setHeroImagesState(newHeroImages);
+      }
 
-    // Other site content
-    const fetchContent = async () => {
-      try {
-        const [home, about, contact, gallery, heroImgs, heroTxts, footer] = await Promise.all([
-          fetch(`${API_URL}/api/content/home_content`).then(r => r.json()),
-          fetch(`${API_URL}/api/content/about_content`).then(r => r.json()),
-          fetch(`${API_URL}/api/content/contact_page`).then(r => r.json()),
-          fetch(`${API_URL}/api/content/gallery_images`).then(r => r.json()),
-          fetch(`${API_URL}/api/content/hero_images`).then(r => r.json()),
-          fetch(`${API_URL}/api/content/hero_texts`).then(r => r.json()),
-          fetch(`${API_URL}/api/content/footer`).then(r => r.json()),
-        ]);
-        if (home) setHomeContentState(home);
-        if (about) setAboutContentState(about);
-        if (contact) setContactPageInfoState(contact);
-        if (gallery) setGalleryImagesState(gallery);
-        if (heroImgs) setHeroImagesState(heroImgs);
-        if (heroTxts) setHeroTextsState(heroTxts);
-        if (footer) setFooterContentState(footer);
-      } catch (err) {
-        console.error('Error fetching site content:', err);
+      // Fetch Home Content
+      const { data: featuresData } = await supabase.from('home_features').select('*').order('display_order');
+      const { data: ctaData } = await supabase.from('home_cta').select('*').single();
+
+      setHomeContentState(prev => ({
+        ...prev,
+        features: featuresData || [],
+        cta: ctaData ? { title: ctaData.title, description: ctaData.description } : { title: '', description: '' },
+        hero: heroTexts['home'] as any || prev.hero
+      }));
+
+      // Fetch About Content
+      const { data: storyData } = await supabase.from('about_story').select('*').single();
+      const { data: valuesData } = await supabase.from('about_values').select('*').order('display_order');
+      const { data: teamData } = await supabase.from('team_members').select('*').order('display_order');
+
+      setAboutContentState(prev => ({
+        ...prev,
+        story: storyData ? { paragraph1: storyData.paragraph1, paragraph2: storyData.paragraph2, paragraph3: storyData.paragraph3, images: storyData.images || [] } : prev.story,
+        values: valuesData || [],
+        team: teamData ? teamData.map(t => ({ ...t, image: t.image_url })) : []
+      }));
+
+      // Fetch Gallery Images
+      const { data: galleryData } = await supabase.from('gallery_images').select('*').order('created_at', { ascending: false });
+      if (galleryData) setGalleryImagesState(galleryData);
+
+      // Fetch Contact Info
+      const { data: contactData } = await supabase.from('contact_info').select('*').single();
+      setContactPageInfoState(prev => ({
+        ...prev,
+        contactInfo: contactData ? { address: contactData.address, phone: contactData.phone, email: contactData.email, hours: { weekday: contactData.weekday_hours, weekend: contactData.weekend_hours }, mapUrl: contactData.map_url } : prev.contactInfo,
+        pageContent: { heroTitle: heroTexts['contact']?.title || '', heroSubtitle: heroTexts['contact']?.subtitle || '' }
+      }));
+
+      // Fetch Footer Info
+      const { data: footerData } = await supabase.from('footer_info').select('*').single();
+      if (footerData) {
+        setFooterContentState({
+          copyrightText: footerData.copyright_text,
+          description: footerData.description,
+          socialLinks: { tiktok: footerData.tiktok_url }
+        });
       }
     };
-    fetchContent();
 
-    // Load cart from localStorage
+    fetchData();
+
+    // Fetch admin data if authenticated
+    const fetchAdminData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: msgData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (msgData) setContactMessages(msgData.map(m => ({ ...m, createdAt: m.created_at })));
+
+        const { data: resData } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
+        if (resData) setReservations(resData.map(r => ({ ...r, createdAt: r.created_at, specialRequests: r.special_requests })));
+
+        const { data: userData } = await supabase.from('profiles').select('*');
+        if (userData) setUsers(userData);
+      }
+    };
+    fetchAdminData();
+
     const savedCart = localStorage.getItem('restaurant-cart');
     if (savedCart) setCart(JSON.parse(savedCart));
 
-    // Load site visitors counter
     const visitors = localStorage.getItem('site-visitors');
     if (visitors) setSiteVisitors(parseInt(visitors, 10));
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist cart changes
   useEffect(() => {
@@ -342,21 +338,13 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
 
   // Menu functions
   const addMenuItem = async (item: Omit<MenuItem, 'id'>) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      // Map 'image' to 'image_url' for server compatibility
-      const { image, ...rest } = item as any;
-      const serverData = { ...rest, image_url: image };
-
-      const res = await fetch(`${API_URL}/api/menu`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(serverData),
-      });
-      if (res.ok) {
-        const newItem = await res.json();
-        setMenuItems([...menuItems, newItem]);
+      const { image, categoryId, ...rest } = item as any;
+      const serverData = { ...rest, image_url: image, category: categoryId };
+      const { data, error } = await supabase.from('menu_items').insert([serverData]).select().single();
+      if (error) throw error;
+      if (data) {
+        setMenuItems([...menuItems, { ...data, image: data.image_url, categoryId: data.category }]);
       }
     } catch (err) {
       console.error('Error adding menu item:', err);
@@ -364,35 +352,26 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateMenuItem = async (id: string, updates: Partial<MenuItem>) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      // Map 'image' to 'image_url' for server compatibility
-      const { image, ...rest } = updates as any;
-      const serverData = image !== undefined ? { ...rest, image_url: image } : rest;
+      const { image, categoryId, ...rest } = updates as any;
+      const serverData: any = { ...rest };
 
-      const res = await fetch(`${API_URL}/api/menu/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(serverData),
-      });
-      if (res.ok) {
-        setMenuItems(menuItems.map(item => (item.id === id ? { ...item, ...updates } : item)));
-      }
+      if (image !== undefined) serverData.image_url = image;
+      if (categoryId !== undefined) serverData.category = categoryId;
+
+      const { error } = await supabase.from('menu_items').update(serverData).eq('id', id);
+      if (error) throw error;
+      setMenuItems(menuItems.map(item => (item.id === id ? { ...item, ...updates } : item)));
     } catch (err) {
       console.error('Error updating menu item:', err);
     }
   };
 
   const deleteMenuItem = async (id: string) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/menu/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setMenuItems(menuItems.filter(item => item.id !== id));
+      const { error } = await supabase.from('menu_items').delete().eq('id', id);
+      if (error) throw error;
+      setMenuItems(menuItems.filter(item => item.id !== id));
     } catch (err) {
       console.error('Error deleting menu item:', err);
     }
@@ -401,14 +380,12 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   // Reservation functions
   const addReservation = async (reservation: Omit<Reservation, 'id' | 'createdAt'>) => {
     try {
-      const res = await fetch(`${API_URL}/api/reservations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reservation),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const newRes = { ...reservation, id: data.id, createdAt: new Date().toISOString(), status: 'pending' as const };
+      const { specialRequests, ...rest } = reservation;
+      const dbData = { ...rest, special_requests: specialRequests, status: 'pending' };
+      const { data, error } = await supabase.from('reservations').insert([dbData]).select().single();
+      if (error) throw error;
+      if (data) {
+        const newRes = { ...reservation, id: data.id, createdAt: data.created_at, status: 'pending' as const };
         setReservations([newRes, ...reservations]);
       }
     } catch (err) {
@@ -417,33 +394,20 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateReservationStatus = async (id: string, status: Reservation['status']) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/reservations/${id}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        setReservations(reservations.map(r => (r.id === id ? { ...r, status } : r)));
-      }
+      const { error } = await supabase.from('reservations').update({ status }).eq('id', id);
+      if (error) throw error;
+      setReservations(reservations.map(r => (r.id === id ? { ...r, status } : r)));
     } catch (err) {
       console.error('Error updating reservation:', err);
     }
   };
 
   const deleteReservation = async (id: string) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/reservations/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (res.ok) {
-        setReservations(reservations.filter(r => r.id !== id));
-      }
+      const { error } = await supabase.from('reservations').delete().eq('id', id);
+      if (error) throw error;
+      setReservations(reservations.filter(r => r.id !== id));
     } catch (err) {
       console.error('Error deleting reservation:', err);
     }
@@ -452,14 +416,10 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   // Contact message functions
   const addContactMessage = async (message: Omit<ContactMessage, 'id' | 'createdAt' | 'status'>) => {
     try {
-      const res = await fetch(`${API_URL}/api/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(message),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const newMsg = { ...message, id: data.id, createdAt: new Date().toISOString(), status: 'unread' as const };
+      const { data, error } = await supabase.from('messages').insert([message]).select().single();
+      if (error) throw error;
+      if (data) {
+        const newMsg = { ...message, id: data.id, createdAt: data.created_at, status: 'unread' as const };
         setContactMessages([newMsg, ...contactMessages]);
       }
     } catch (err) {
@@ -468,33 +428,20 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateContactMessageStatus = async (id: string, status: ContactMessage['status']) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/messages/${id}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        setContactMessages(contactMessages.map(m => (m.id === id ? { ...m, status } : m)));
-      }
+      const { error } = await supabase.from('messages').update({ status }).eq('id', id);
+      if (error) throw error;
+      setContactMessages(contactMessages.map(m => (m.id === id ? { ...m, status } : m)));
     } catch (err) {
       console.error('Error updating message status:', err);
     }
   };
 
   const deleteContactMessage = async (id: string) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/api/messages/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (res.ok) {
-        setContactMessages(contactMessages.filter(m => m.id !== id));
-      }
+      const { error } = await supabase.from('messages').delete().eq('id', id);
+      if (error) throw error;
+      setContactMessages(contactMessages.filter(m => m.id !== id));
     } catch (err) {
       console.error('Error deleting message:', err);
     }
@@ -502,110 +449,174 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
 
   // User Management
   const addUser = async (user: Omit<User, 'id' | 'created_at'>) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_URL}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(user),
-      });
-      if (res.ok) {
-        const newUser = await res.json();
-        setUsers([...users, newUser]);
-      }
-    } catch (err) {
-      console.error('Error adding user:', err);
-    }
+    // Note: Creating users in Supabase Auth usually requires admin API or client-side signup.
+    // Here we just insert into profiles if using a separate profiles table logic, 
+    // but ideally this should be handled via auth.signUp()
+    console.warn('Add User should be handled via Supabase Auth SignUp');
   };
 
   const deleteUser = async (id: string) => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-    try {
-      const res = await fetch(`${API_URL}/api/users/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setUsers(users.filter(u => u.id !== id));
-    } catch (err) {
-      console.error('Error deleting user:', err);
-    }
+    // Deleting from auth.users requires service role key or admin API
+    console.warn('Delete User requires Admin API');
   };
 
   // Footer function
-  const setFooterContent = (content: FooterContent) => {
+  const setFooterContent = async (content: FooterContent) => {
     setFooterContentState(content);
-    saveContent('footer', content);
+    await supabase.from('footer_info').upsert({
+      id: 1,
+      copyright_text: content.copyrightText,
+      description: content.description,
+      tiktok_url: content.socialLinks.tiktok
+    });
   };
 
   // Hero image management
   const setHeroImage = async (page: string, urls: string[]) => {
     const next = { ...heroImages, [page]: urls };
     setHeroImagesState(next);
-    await saveContent('hero_images', next);
+    await supabase.from('page_content').upsert({
+      page_slug: page,
+      hero_images: urls
+    }, { onConflict: 'page_slug' });
   };
 
   const setHeroText = async (page: string, payload: { title?: string; subtitle?: string; tagline?: string }) => {
     const next = { ...heroTexts, [page]: payload };
     setHeroTextsState(next);
-    await saveContent('hero_texts', next);
+    await supabase.from('page_content').upsert({
+      page_slug: page,
+      hero_title: payload.title,
+      hero_subtitle: payload.subtitle,
+      hero_tagline: payload.tagline
+    }, { onConflict: 'page_slug' });
   };
 
   // Page content setters
-  const setHomeContent = (c: HomeContent) => {
+  const setHomeContent = async (c: HomeContent) => {
     setHomeContentState(c);
-    saveContent('home_content', c);
+
+    // Update CTA
+    await supabase.from('home_cta').upsert({
+      id: 1,
+      title: c.cta.title,
+      description: c.cta.description
+    });
+
+    // Update Features: Wipe and Recreate
+    await supabase.from('home_features').delete().neq('id', 0);
+
+    if (c.features.length > 0) {
+      const featuresToInsert = c.features.map((f, index) => ({
+        title: f.title,
+        description: f.description,
+        display_order: index + 1
+      }));
+      await supabase.from('home_features').insert(featuresToInsert);
+    }
   };
 
-  const setAboutContent = (c: AboutContent) => {
+  const setAboutContent = async (c: AboutContent) => {
     setAboutContentState(c);
-    saveContent('about_content', c);
-  };
 
-  const setGalleryImages = (imgs: GalleryImage[]) => {
-    setGalleryImagesState(imgs);
-    saveContent('gallery_images', imgs);
-  };
+    // Update Story
+    await supabase.from('about_story').upsert({
+      id: 1,
+      paragraph1: c.story.paragraph1,
+      paragraph2: c.story.paragraph2,
+      paragraph3: c.story.paragraph3,
+      images: c.story.images
+    });
 
-  const setContactPageInfo = (info: ContactPageInfo) => {
-    setContactPageInfoState(info);
-    saveContent('contact_page', info);
-  };
-
-  // Site visitor counters
-  // Site visitor counters
-  const incrementSiteVisitors = async () => {
-    // Check if we already counted this session
-    if (sessionStorage.getItem('visited_session')) {
-      return;
+    // Update Values: Wipe and Recreate
+    await supabase.from('about_values').delete().neq('id', 0);
+    if (c.values.length > 0) {
+      const valuesToInsert = c.values.map((v, index) => ({
+        title: v.title,
+        description: v.description,
+        display_order: index + 1
+      }));
+      await supabase.from('about_values').insert(valuesToInsert);
     }
 
+    // Update Team: Wipe and Recreate
+    await supabase.from('team_members').delete().neq('id', 0);
+    if (c.team.length > 0) {
+      const teamToInsert = c.team.map((t, index) => ({
+        name: t.name,
+        role: t.role,
+        description: t.description,
+        image_url: t.image,
+        display_order: index + 1
+      }));
+      await supabase.from('team_members').insert(teamToInsert);
+    }
+  };
+
+  const setGalleryImages = async (imgs: GalleryImage[]) => {
+    setGalleryImagesState(imgs);
+
+    // Update Gallery: Wipe and Recreate
+    await supabase.from('gallery_images').delete().neq('id', 0);
+
+    if (imgs.length > 0) {
+      const imgsToInsert = imgs.map(img => ({
+        src: img.src,
+        alt: img.alt,
+        category: img.category
+      }));
+      await supabase.from('gallery_images').insert(imgsToInsert);
+    }
+  };
+
+  const setContactPageInfo = async (info: ContactPageInfo) => {
+    setContactPageInfoState(info);
+    await supabase.from('contact_info').upsert({
+      id: 1,
+      address: info.contactInfo.address,
+      phone: info.contactInfo.phone,
+      email: info.contactInfo.email,
+      weekday_hours: info.contactInfo.hours.weekday,
+      weekend_hours: info.contactInfo.hours.weekend,
+      map_url: info.contactInfo.mapUrl
+    });
+  };
+
+  // Site visitor counters
+  const incrementSiteVisitors = async () => {
+    if (sessionStorage.getItem('visited_session')) return;
+
     try {
-      const res = await fetch(`${API_URL}/api/visitors/increment`, { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        setSiteVisitors(data.count);
-        sessionStorage.setItem('visited_session', 'true');
-      }
+      // Optimistic update for UI
+      const newCount = siteVisitors + 1;
+      setSiteVisitors(newCount);
+      sessionStorage.setItem('visited_session', 'true');
+
+      // Parse User Agent
+      const parser = new UAParser();
+      const result = parser.getResult();
+      const browser = result.browser.name || 'Unknown';
+      const deviceType = result.device.type || 'Desktop'; // Default to Desktop if undefined
+      const os = result.os.name || 'Unknown';
+      const userAgent = result.ua;
+
+      // Call the RPC function to track visit with details
+      await supabase.rpc('track_visit', {
+        p_user_agent: userAgent,
+        p_browser: browser,
+        p_device_type: deviceType,
+        p_os: os
+      });
+
     } catch (err) {
       console.error('Error incrementing visitors:', err);
     }
   };
 
   const resetSiteVisitors = async () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) return;
-
     try {
-      const res = await fetch(`${API_URL}/api/visitors/reset`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setSiteVisitors(0);
-      }
-
+      setSiteVisitors(0);
+      await supabase.from('site_content').upsert({ key: 'site_visitors', value: JSON.stringify({ count: 0 }) }, { onConflict: 'key' });
     } catch (err) {
       console.error('Error resetting visitors:', err);
     }

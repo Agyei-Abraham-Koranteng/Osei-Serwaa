@@ -28,11 +28,14 @@ import ReservationsManagement from "./pages/admin/ReservationsManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import ContactManagement from "./pages/admin/ContactManagement";
 import FooterManagement from "./pages/admin/FooterManagement";
+import SiteVisitors from "./pages/admin/SiteVisitors";
 import ManageAdmins from "./pages/admin/ManageAdmins";
 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+import ScrollToTop from "@/components/ScrollToTop";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,7 +44,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
             <Routes>
               {/* User Routes with Main Layout */}
               <Route element={<MainLayout />}>
@@ -63,6 +67,7 @@ const App = () => (
                 <Route path="gallery" element={<GalleryManagement />} />
                 <Route path="contact" element={<ContactManagement />} />
                 <Route path="footer" element={<FooterManagement />} />
+                <Route path="visitors" element={<SiteVisitors />} />
                 <Route path="manage-admins" element={<ManageAdmins />} />
               </Route>
 

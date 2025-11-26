@@ -14,7 +14,7 @@ const Reservations = () => {
   const { addReservation, heroImages, contactPageInfo, heroTexts } = useRestaurant();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const hero = heroImages.reservations || heroRestaurant;
+  const hero = heroImages.reservations?.[0] || heroRestaurant;
   const heroTitle = heroTexts?.reservations?.title || 'Make a Reservation';
   const heroSubtitle = heroTexts?.reservations?.subtitle || 'Book a table and experience authentic Ghanaian cuisine in our warm and welcoming restaurant';
 
@@ -251,20 +251,9 @@ const Reservations = () => {
               </form>
 
               {/* Additional Info */}
+              {/* Additional Info removed as per request */}
               <div className="mt-8 pt-6 border-t border-border space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Opening Hours:</strong>
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {contactPageInfo?.contactInfo?.hours?.weekday || 'Monday - Friday: 11:00 AM - 10:00 PM'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {contactPageInfo?.contactInfo?.hours?.weekend || 'Saturday - Sunday: 10:00 AM - 11:00 PM'}
-                </p>
-                <p className="text-sm text-muted-foreground mt-4">
-                  For large groups (20+ guests), please call us directly at{' '}
-                  <span className="text-primary font-medium">{contactPageInfo?.contactInfo?.phone || '+233 24 750 5196'}</span>
-                </p>
+                {/* Content removed */}
               </div>
             </CardContent>
           </Card>

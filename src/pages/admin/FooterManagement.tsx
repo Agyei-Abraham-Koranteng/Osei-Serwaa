@@ -105,49 +105,28 @@ const FooterManagement = () => {
                         </CardHeader>
                         <CardContent className="space-y-6 pt-6">
                             <div className="space-y-3">
-                                <Label htmlFor="facebook" className="text-base font-semibold flex items-center gap-2">
-                                    <Facebook className="h-4 w-4 text-blue-600" /> Facebook URL
+                                <Label htmlFor="tiktok" className="text-base font-semibold flex items-center gap-2">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="h-4 w-4"
+                                    >
+                                        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                                    </svg>
+                                    TikTok URL
                                 </Label>
                                 <Input
-                                    id="facebook"
-                                    value={localContent.socialLinks.facebook}
+                                    id="tiktok"
+                                    value={localContent.socialLinks.tiktok}
                                     onChange={(e) => setLocalContent({
                                         ...localContent,
-                                        socialLinks: { ...localContent.socialLinks, facebook: e.target.value }
+                                        socialLinks: { ...localContent.socialLinks, tiktok: e.target.value }
                                     })}
-                                    placeholder="https://facebook.com/oseiserwaakitchen"
-                                    className="h-12 text-base border-border/50 focus:border-primary/50"
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label htmlFor="instagram" className="text-base font-semibold flex items-center gap-2">
-                                    <Instagram className="h-4 w-4 text-pink-600" /> Instagram URL
-                                </Label>
-                                <Input
-                                    id="instagram"
-                                    value={localContent.socialLinks.instagram}
-                                    onChange={(e) => setLocalContent({
-                                        ...localContent,
-                                        socialLinks: { ...localContent.socialLinks, instagram: e.target.value }
-                                    })}
-                                    placeholder="https://instagram.com/oseiserwaakitchen"
-                                    className="h-12 text-base border-border/50 focus:border-primary/50"
-                                />
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label htmlFor="twitter" className="text-base font-semibold flex items-center gap-2">
-                                    <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X URL
-                                </Label>
-                                <Input
-                                    id="twitter"
-                                    value={localContent.socialLinks.twitter}
-                                    onChange={(e) => setLocalContent({
-                                        ...localContent,
-                                        socialLinks: { ...localContent.socialLinks, twitter: e.target.value }
-                                    })}
-                                    placeholder="https://twitter.com/oseiserwaakitchen"
+                                    placeholder="https://tiktok.com/@oseiserwaakitchen"
                                     className="h-12 text-base border-border/50 focus:border-primary/50"
                                 />
                             </div>

@@ -16,37 +16,26 @@ const Footer = () => {
               {footerContent?.description || 'Authentic Ghanaian cuisine prepared with love and traditional recipes passed down through generations.'}
             </p>
             <div className="flex space-x-3">
-              {footerContent?.socialLinks?.facebook && (
+              {footerContent?.socialLinks?.tiktok && (
                 <a
-                  href={footerContent.socialLinks.facebook}
+                  href={footerContent.socialLinks.tiktok}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 bg-background/10 rounded-full hover:bg-gradient-warm hover:scale-110 transition-all duration-300 shadow-sm hover:shadow-md"
-                  aria-label="Facebook"
+                  className="p-3 bg-background/10 rounded-full hover:bg-gradient-warm hover:scale-110 transition-all duration-300 shadow-sm hover:shadow-md group"
+                  aria-label="TikTok"
                 >
-                  <Facebook className="h-5 w-5" />
-                </a>
-              )}
-              {footerContent?.socialLinks?.instagram && (
-                <a
-                  href={footerContent.socialLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-background/10 rounded-full hover:bg-gradient-warm hover:scale-110 transition-all duration-300 shadow-sm hover:shadow-md"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="h-5 w-5" />
-                </a>
-              )}
-              {footerContent?.socialLinks?.twitter && (
-                <a
-                  href={footerContent.socialLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-background/10 rounded-full hover:bg-gradient-warm hover:scale-110 transition-all duration-300 shadow-sm hover:shadow-md"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="h-5 w-5" />
+                  {/* TikTok SVG Icon */}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5 group-hover:text-black dark:group-hover:text-white"
+                  >
+                    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                  </svg>
                 </a>
               )}
             </div>
@@ -117,7 +106,10 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-background/10 text-center text-sm opacity-80">
-          <p className="font-medium">{footerContent?.copyrightText || `© ${new Date().getFullYear()} Osei Serwaa Kitchen. All rights reserved.`}</p>
+          <p className="font-medium mb-2">{footerContent?.copyrightText || `© ${new Date().getFullYear()} Osei Serwaa Kitchen. All rights reserved.`}</p>
+          <p className="text-xs">
+            Powered By <a href="https://www.facebook.com/profile.php?id=100082206290703" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent font-bold hover:opacity-80 transition-opacity">AKA-TECH</a>
+          </p>
         </div>
       </div>
     </footer>
