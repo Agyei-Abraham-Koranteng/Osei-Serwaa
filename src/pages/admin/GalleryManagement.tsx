@@ -18,7 +18,7 @@ const GalleryManagement = () => {
     // Hero Section
     const [heroTitle, setHeroTitle] = useState(heroTexts?.gallery?.title || 'Gallery');
     const [heroSubtitle, setHeroSubtitle] = useState(heroTexts?.gallery?.subtitle || '');
-    const [heroImage, setHeroImageState] = useState(heroImages?.gallery || '');
+    const [heroImage, setHeroImageState] = useState(heroImages?.gallery?.[0] || '');
 
     // Gallery Images
     const [images, setImages] = useState<GalleryImage[]>(galleryImages || []);
@@ -34,7 +34,7 @@ const GalleryManagement = () => {
 
     useEffect(() => {
         if (heroImages?.gallery) {
-            setHeroImageState(heroImages.gallery);
+            setHeroImageState(heroImages.gallery[0] || '');
         }
     }, [heroImages]);
 
@@ -45,7 +45,7 @@ const GalleryManagement = () => {
     const handleSaveHero = () => {
         setHeroText('gallery', { title: heroTitle, subtitle: heroSubtitle });
         if (heroImage) {
-            setHeroImage('gallery', heroImage);
+            setHeroImage('gallery', [heroImage]);
         }
         toast({ title: '✨ Success', description: 'Hero section updated successfully' });
     };

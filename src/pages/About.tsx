@@ -102,12 +102,12 @@ const About = () => {
         {/* Values Section */}
         <div className="mb-24">
           <h2 className="text-4xl font-bold text-center mb-16">Our Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {(aboutContent?.values || []).map((value, index) => {
               const icons = [Heart, Award, Users, Utensils];
               const Icon = icons[index % icons.length];
               return (
-                <Card key={index} className="hover:shadow-card transition-all duration-500 hover-scale group border-border/50 hover:border-primary/20">
+                <Card key={index} className="w-full md:w-[calc(50%-2rem)] lg:w-[calc(25%-2rem)] min-w-[280px] hover:shadow-card transition-all duration-500 hover-scale group border-border/50 hover:border-primary/20">
                   <CardContent className="pt-10 pb-8 text-center space-y-5">
                     <div className="flex justify-center">
                       <div className="p-5 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl group-hover:scale-110 transition-transform duration-500 shadow-sm">
@@ -130,7 +130,15 @@ const About = () => {
             {(aboutContent?.team || []).map((member, index) => (
               <Card key={index} className="hover:shadow-card transition-all duration-500 hover-scale border-border/50 hover:border-primary/20">
                 <CardContent className="pt-8 text-center space-y-4">
-                  <div className="w-28 h-28 mx-auto bg-gradient-to-br from-primary/20 via-accent/20 to-secondary/20 rounded-full shadow-md" />
+                  {member.image ? (
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-28 h-28 mx-auto rounded-full object-cover shadow-md"
+                    />
+                  ) : (
+                    <div className="w-28 h-28 mx-auto bg-gradient-to-br from-primary/20 via-accent/20 to-secondary/20 rounded-full shadow-md" />
+                  )}
                   <h3 className="text-xl font-bold">{member.name}</h3>
                   <p className="text-primary font-semibold text-lg">{member.role}</p>
                   <p className="text-muted-foreground leading-relaxed">{member.description}</p>

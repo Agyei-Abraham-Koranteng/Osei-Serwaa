@@ -26,6 +26,63 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
         setPreview(value || '');
     }, [value]);
 
+    // Compress image if needed
+    const compressImage = async (file: File): Promise<File> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Max dimensions
+                    const MAX_WIDTH = 1920;
+                    const MAX_HEIGHT = 1920;
+
+                    // Calculate new dimensions while maintaining aspect ratio
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height = (height * MAX_WIDTH) / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width = (width * MAX_HEIGHT) / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    // Convert to blob with quality adjustment
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                const compressedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now(),
+                                });
+                                resolve(compressedFile);
+                            } else {
+                                resolve(file);
+                            }
+                        },
+                        'image/jpeg',
+                        0.85 // Quality (0-1)
+                    );
+                };
+                img.src = e.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -35,16 +92,6 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
             toast({
                 title: 'Invalid file type',
                 description: 'Please select an image file',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        // Validate file size (5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast({
-                title: 'File too large',
-                description: 'Image must be less than 5MB',
                 variant: 'destructive',
             });
             return;
@@ -60,13 +107,23 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
         // Upload to Supabase Storage
         setUploading(true);
         try {
-            const fileExt = file.name.split('.').pop();
+            // Compress image if it's too large
+            let fileToUpload = file;
+            if (file.size > 2 * 1024 * 1024) { // If larger than 2MB, compress
+                toast({
+                    title: 'Compressing image...',
+                    description: 'Large image detected, optimizing for upload',
+                });
+                fileToUpload = await compressImage(file);
+            }
+
+            const fileExt = fileToUpload.name.split('.').pop();
             const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('images')
-                .upload(filePath, file);
+                .upload(filePath, fileToUpload);
 
             if (uploadError) {
                 throw uploadError;
