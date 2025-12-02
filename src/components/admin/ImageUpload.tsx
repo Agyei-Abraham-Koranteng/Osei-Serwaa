@@ -204,7 +204,11 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
                     type="button"
                     variant={!useUrl ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setUseUrl(false)}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setUseUrl(false);
+                    }}
                 >
                     <Upload className="h-4 w-4 mr-2" />
                     Upload File
@@ -213,7 +217,11 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
                     type="button"
                     variant={useUrl ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setUseUrl(true)}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setUseUrl(true);
+                    }}
                 >
                     <LinkIcon className="h-4 w-4 mr-2" />
                     Use URL
@@ -230,13 +238,27 @@ export const ImageUpload = ({ label = 'Image', value, onChange, onImageIdChange 
                         onChange={handleFileSelect}
                         className="hidden"
                         disabled={uploading}
+                        id="file-upload-input"
                     />
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Upload button clicked, opening file picker...');
+                            console.log('File input ref:', fileInputRef.current);
+                            if (fileInputRef.current) {
+                                fileInputRef.current.click();
+                            } else {
+                                console.error('File input ref is null!');
+                            }
+                        }}
+                        onMouseDown={(e) => {
+                            console.log('Mouse down on upload button');
+                        }}
                         disabled={uploading}
-                        className="w-full"
+                        className="w-full cursor-pointer"
                     >
                         {uploading ? (
                             <>

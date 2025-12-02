@@ -18,7 +18,7 @@ const GalleryManagement = () => {
     // Hero Section
     const [heroTitle, setHeroTitle] = useState(heroTexts?.gallery?.title || 'Gallery');
     const [heroSubtitle, setHeroSubtitle] = useState(heroTexts?.gallery?.subtitle || '');
-    const [heroImage, setHeroImageState] = useState(heroImages?.gallery?.[0] || '');
+    const [heroImagesArray, setHeroImagesArray] = useState<string[]>(heroImages?.gallery || ['']);
 
     // Gallery Images
     const [images, setImages] = useState<GalleryImage[]>(galleryImages || []);
@@ -34,7 +34,7 @@ const GalleryManagement = () => {
 
     useEffect(() => {
         if (heroImages?.gallery) {
-            setHeroImageState(heroImages.gallery[0] || '');
+            setHeroImagesArray(heroImages.gallery);
         }
     }, [heroImages]);
 
@@ -42,10 +42,22 @@ const GalleryManagement = () => {
         setImages(galleryImages || []);
     }, [galleryImages]);
 
+    const handleAddHeroImage = () => {
+        setHeroImagesArray([...heroImagesArray, '']);
+    };
+
+    const handleHeroImageChange = (index: number, url: string) => {
+        const newArr = [...heroImagesArray];
+        newArr[index] = url;
+        setHeroImagesArray(newArr);
+    };
+
     const handleSaveHero = () => {
         setHeroText('gallery', { title: heroTitle, subtitle: heroSubtitle });
-        if (heroImage) {
-            setHeroImage('gallery', [heroImage]);
+        // Filter out empty strings before saving
+        const cleanImages = heroImagesArray.filter(url => url && url.trim() !== '');
+        if (cleanImages.length > 0) {
+            setHeroImage('gallery', cleanImages);
         }
         toast({ title: '✨ Success', description: 'Hero section updated successfully' });
     };
@@ -134,11 +146,48 @@ const GalleryManagement = () => {
                                 />
                             </div>
 
-                            <ImageUpload
-                                label="Hero Background Image"
-                                value={heroImage}
-                                onChange={setHeroImageState}
-                            />
+                            {/* Hero Images */}
+                            <div className="space-y-4">
+                                <Label className="text-base font-semibold">Hero Background Images</Label>
+                                <p className="text-sm text-muted-foreground">Add multiple images for a slideshow effect</p>
+                                {heroImagesArray.map((url, idx) => (
+                                    <div key={idx} className="relative">
+                                        <ImageUpload
+                                            label={`Hero Image ${idx + 1}`}
+                                            value={url}
+                                            onChange={newUrl => handleHeroImageChange(idx, newUrl)}
+                                        />
+                                        {heroImagesArray.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="sm"
+                                                className="mt-2"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    const newArr = heroImagesArray.filter((_, i) => i !== idx);
+                                                    setHeroImagesArray(newArr);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Remove Image {idx + 1}
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleAddHeroImage();
+                                    }}
+                                    variant="outline"
+                                    className="w-full h-12 text-base font-semibold"
+                                >
+                                    <Plus className="h-5 w-5 mr-2" />
+                                    Add Hero Image
+                                </Button>
+                            </div>
 
                             <Button onClick={handleSaveHero} className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all" variant="premium">
                                 <Save className="h-5 w-5 mr-2" />
